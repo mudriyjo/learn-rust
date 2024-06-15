@@ -1,3 +1,5 @@
+use std::io::Write;
+
 fn greet(name: String) {
     println!("Hello, {name}!");
 }
@@ -11,6 +13,13 @@ fn greet_with_borrowing(name: &mut String) {
     *name = format!("Mr. {}!", name);
     println!("Hello, {name}");
 }
+
+fn read_console() -> String {
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).expect("Stdin not working!");
+    input.trim().to_string()
+}
+
 fn main() {
     let num: i32 = 5;
     println!("{num}");
@@ -39,5 +48,9 @@ fn main() {
 
     // Option 4
     greet_with_borrowing(&mut name);
-    println!("Updated name is: {name}");
+    println!("Updated name is: {name}\n");
+    print!("Write input: ");
+    std::io::stdout().flush();
+    let input = read_console();
+    println!(">>> [{input}]");
 }
