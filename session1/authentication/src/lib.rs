@@ -1,5 +1,5 @@
 use std::{collections::HashMap, fs, path::Path};
-
+use sha2::{Sha256, Digest};
 use serde::{Deserialize, Serialize};
 
 pub fn greet_user(name: &str) -> String {
@@ -47,11 +47,16 @@ fn get_admins() -> HashMap<String, User> {
     .filter(|user| user.1.role == LoginRole::Admin)
     .collect()
 }
+fn hash_password(password: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(password);
+    format!("{:X}", hasher.finalize())
+}
 
 fn get_default_user() -> HashMap<String, User> {
     let mut users: HashMap<String, User> = HashMap::new();
-    users.insert("admin".to_string(), User::new("admin", "password", LoginRole::Admin));
-    users.insert("bob".to_string(), User::new("bob", "password", LoginRole::User));
+    users.insert("admin".to_string(), User::new("admin", &hash_password("password"), LoginRole::Admin));
+    users.insert("bob".to_string(), User::new("bob", &hash_password("password"), LoginRole::User));
     users
 }
 
@@ -72,7 +77,7 @@ fn get_user() -> HashMap<String, User> {
 pub fn login(name: &str, password: &str) -> Option<LoginAction> {
     let username = name.to_lowercase();
     if let Some(user) = get_user().get(&username) {
-        if user.password == password {
+        if user.password == hash_password(password) {
             return Some(LoginAction::Granted(user.role.clone()));
         } else {
             return Some(LoginAction::Denied);
