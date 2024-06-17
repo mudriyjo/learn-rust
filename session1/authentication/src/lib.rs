@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, path::Path};
-use sha2::{Sha256, Digest};
 use serde::{Deserialize, Serialize};
+use sha2::Sha256;
 
 pub fn greet_user(name: &str) -> String {
     format!("Hello {name}!")
@@ -48,6 +48,7 @@ fn get_admins() -> HashMap<String, User> {
     .collect()
 }
 fn hash_password(password: &str) -> String {
+    use sha2::Digest;
     let mut hasher = Sha256::new();
     hasher.update(password);
     format!("{:X}", hasher.finalize())
