@@ -23,7 +23,6 @@ pub fn login(name: &str, password: &str) -> Option<LoginAction> {
         return None;
     }
 
-
     if name == "admin" && password == "password" {
         Some(LoginAction::Granted(LoginRole::Admin))
     } else if name == "bob" && password == "password" {

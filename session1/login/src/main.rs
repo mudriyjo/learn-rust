@@ -1,4 +1,4 @@
-use authentication::{read_console, login};
+use authentication::{login, read_console, LoginAction, LoginRole};
 fn main() {
     let mut attempt = 3;
     loop {
@@ -6,15 +6,35 @@ fn main() {
         let name = read_console();
         println!("Write your password:");
         let password = read_console();
-        if login(&name, &password) {
-            println!("Welcome!");
-            break;
-        } else if attempt > 3 {
-            println!("Too many attempts...");
-            break;
-        } else {
-            println!("Wrong name or password....");
-            attempt += 1;
+        match login(&name, &password) {
+            Some(LoginAction::Granted(role)) => {
+                match role {
+                    LoginRole::Admin => println!("Welcome Admin!"),
+                    LoginRole::User => println!("Welcome User!")
+                }
+                break;
+            }
+            Some(LoginAction::Denied) => {
+                println!("Wrong name or password....");
+                attempt += 1;
+                if attempt > 3 {
+                    break;
+                }
+            }
+            None => {
+                println!("New user tried login!");
+                break;
+            }
         }
+        // if login(&name, &password) {
+        //     println!("Welcome!");
+        //     break;
+        // } else if attempt > 3 {
+        //     println!("Too many attempts...");
+        //     break;
+        // } else {
+        //     println!("Wrong name or password....");
+        //     attempt += 1;
+        // }
     }
 }
