@@ -39,14 +39,14 @@ impl User {
     }
 }
 
-fn getAdmins() -> HashMap<String, User> {
-    getUser()
+fn get_admins() -> HashMap<String, User> {
+    get_user()
     .into_iter()
     .filter(|user| user.1.role == LoginRole::Admin)
     .collect()
 }
 
-fn getUser() -> HashMap<String, User> {
+fn get_user() -> HashMap<String, User> {
     let mut users: HashMap<String, User> = HashMap::new();
     users.insert("admin".to_string(), User::new("admin", "password", LoginRole::Admin));
     users.insert("bob".to_string(), User::new("bob", "password", LoginRole::User));
@@ -55,7 +55,7 @@ fn getUser() -> HashMap<String, User> {
 
 pub fn login(name: &str, password: &str) -> Option<LoginAction> {
     let username = name.to_lowercase();
-    if let Some(user) = getUser().get(&username) {
+    if let Some(user) = get_user().get(&username) {
         if user.password == password {
             return Some(LoginAction::Granted(user.role.clone()));
         } else {

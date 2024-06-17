@@ -26,15 +26,5 @@ fn main() {
                 break;
             }
         }
-        // if login(&name, &password) {
-        //     println!("Welcome!");
-        //     break;
-        // } else if attempt > 3 {
-        //     println!("Too many attempts...");
-        //     break;
-        // } else {
-        //     println!("Wrong name or password....");
-        //     attempt += 1;
-        // }
     }
 }
