@@ -36,8 +36,15 @@ impl User {
     }
 }
 
-fn getUser() -> [User; 2] {
-    [
+fn getAdmins() -> Vec<User> {
+    getUser()
+    .into_iter()
+    .filter(|user| user.role == LoginRole::Admin)
+    .collect()
+}
+
+fn getUser() -> Vec<User> {
+    vec![
         User::new("admin", "password", LoginRole::Admin),
         User::new("bob", "password", LoginRole::User),
     ]
