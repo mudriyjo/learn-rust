@@ -7,11 +7,14 @@ pub fn read_console() -> String {
     std::io::stdin().read_line(&mut input).expect("Stdin not working!");
     input.trim().to_string()
 }
+
+#[derive(PartialEq, Debug)]
 pub enum LoginRole {
     Admin,
     User
 }
 
+#[derive(PartialEq, Debug)]
 pub enum LoginAction {
     Granted(LoginRole),
     Denied
@@ -43,9 +46,11 @@ mod tests {
 
     #[test]
     fn test_login() {
-        // assert!(login("admin", "password"));
-        // assert!(login("AdMiN", "password"));
-        // assert!(!login("not-admin", "password"));
-        // assert!(!login("admin", "not-password"));
+        assert_eq!(login("admin", "password"), Some(LoginAction::Granted(LoginRole::Admin)));
+        assert_eq!(login("AdMiN", "password"), Some(LoginAction::Granted(LoginRole::Admin)));
+        assert_eq!(login("not-admin", "password"), None);
+        assert_eq!(login("admin", "not-password"), Some(LoginAction::Denied));
+        assert_eq!(login("bob", "not-password"), Some(LoginAction::Denied));
+        assert_eq!(login("bob", "password"), Some(LoginAction::Granted(LoginRole::User)));
     }
 }
