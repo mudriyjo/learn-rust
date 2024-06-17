@@ -1,4 +1,6 @@
-use std::{collections::HashMap};
+use std::{collections::HashMap, fs, path::Path};
+
+use serde::{Deserialize, Serialize};
 
 pub fn greet_user(name: &str) -> String {
     format!("Hello {name}!")
@@ -10,7 +12,7 @@ pub fn read_console() -> String {
     input.trim().to_string()
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum LoginRole {
     Admin,
     User
@@ -22,7 +24,7 @@ pub enum LoginAction {
     Denied
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub username: String,
     pub password: String,
@@ -46,11 +48,25 @@ fn get_admins() -> HashMap<String, User> {
     .collect()
 }
 
-fn get_user() -> HashMap<String, User> {
+fn get_default_user() -> HashMap<String, User> {
     let mut users: HashMap<String, User> = HashMap::new();
     users.insert("admin".to_string(), User::new("admin", "password", LoginRole::Admin));
     users.insert("bob".to_string(), User::new("bob", "password", LoginRole::User));
     users
+}
+
+fn get_user() -> HashMap<String, User> {
+    let users_path = Path::new("users.json");
+    if Path::exists(users_path) {
+        let json_users = fs::read_to_string(users_path).unwrap();
+        let users: HashMap<String, User> = serde_json::from_str(&json_users).unwrap();
+        users
+    } else {
+        let default_users = get_default_user();
+        let json_users = serde_json::to_string(&default_users).unwrap();
+        fs::write(users_path, json_users).unwrap();
+        default_users
+    }
 }
 
 pub fn login(name: &str, password: &str) -> Option<LoginAction> {
