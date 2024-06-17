@@ -1,3 +1,5 @@
+use std::{collections::HashMap};
+
 pub fn greet_user(name: &str) -> String {
     format!("Hello {name}!")
 }
@@ -20,6 +22,7 @@ pub enum LoginAction {
     Denied
 }
 
+#[derive(Debug, Clone)]
 pub struct User {
     pub username: String,
     pub password: String,
@@ -36,23 +39,23 @@ impl User {
     }
 }
 
-fn getAdmins() -> Vec<User> {
+fn getAdmins() -> HashMap<String, User> {
     getUser()
     .into_iter()
-    .filter(|user| user.role == LoginRole::Admin)
+    .filter(|user| user.1.role == LoginRole::Admin)
     .collect()
 }
 
-fn getUser() -> Vec<User> {
-    vec![
-        User::new("admin", "password", LoginRole::Admin),
-        User::new("bob", "password", LoginRole::User),
-    ]
+fn getUser() -> HashMap<String, User> {
+    let mut users: HashMap<String, User> = HashMap::new();
+    users.insert("admin".to_string(), User::new("admin", "password", LoginRole::Admin));
+    users.insert("bob".to_string(), User::new("bob", "password", LoginRole::User));
+    users
 }
 
 pub fn login(name: &str, password: &str) -> Option<LoginAction> {
     let username = name.to_lowercase();
-    if let Some(user) = getUser().iter().find(|user| { user.username == username }) {
+    if let Some(user) = getUser().get(&username) {
         if user.password == password {
             return Some(LoginAction::Granted(user.role.clone()));
         } else {
