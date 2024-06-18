@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, fs, path::{Path, PathBuf}};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 
@@ -35,8 +35,16 @@ impl User {
     pub fn new(username: &str, password: &str, role: LoginRole) -> User {
         Self {
             username: username.to_string(),
-            password: password.to_string(),
+            password: hash_password(password),
             role: role
+        }
+    }
+
+    pub fn new_is_admin(username: &str, password: &str, isAdmin: bool) -> User {
+        Self {
+            username: username.to_string(),
+            password: hash_password(password),
+            role: if isAdmin {LoginRole::Admin} else {LoginRole::User}
         }
     }
 }
@@ -47,6 +55,7 @@ fn get_admins() -> HashMap<String, User> {
     .filter(|user| user.1.role == LoginRole::Admin)
     .collect()
 }
+
 fn hash_password(password: &str) -> String {
     use sha2::Digest;
     let mut hasher = Sha256::new();
@@ -56,22 +65,64 @@ fn hash_password(password: &str) -> String {
 
 fn get_default_user() -> HashMap<String, User> {
     let mut users: HashMap<String, User> = HashMap::new();
-    users.insert("admin".to_string(), User::new("admin", &hash_password("password"), LoginRole::Admin));
-    users.insert("bob".to_string(), User::new("bob", &hash_password("password"), LoginRole::User));
+    users.insert("admin".to_string(), User::new("admin", "password", LoginRole::Admin));
+    users.insert("bob".to_string(), User::new("bob", "password", LoginRole::User));
     users
 }
 
-fn get_user() -> HashMap<String, User> {
-    let users_path = Path::new("users.json");
+fn save_users(users: &HashMap<String, User>) {
+    let json_users = serde_json::to_string(&users).unwrap();
+    fs::write(get_path().as_path(), json_users).unwrap();
+}
+
+fn get_path() -> PathBuf {
+    let mut path = PathBuf::new();
+    path.push("users.json");
+    path
+}
+
+pub fn get_user() -> HashMap<String, User> {
+    let users_path_buf = get_path();
+    let users_path = users_path_buf.as_path();
     if Path::exists(users_path) {
         let json_users = fs::read_to_string(users_path).unwrap();
         let users: HashMap<String, User> = serde_json::from_str(&json_users).unwrap();
         users
     } else {
         let default_users = get_default_user();
-        let json_users = serde_json::to_string(&default_users).unwrap();
-        fs::write(users_path, json_users).unwrap();
+        save_users(&default_users);
         default_users
+    }
+}
+
+pub fn delete_user(username: &str) {
+    let mut users = get_user();
+    if users.contains_key(username) {
+        users.remove(username);
+        save_users(&users);
+    } else {
+        println!("user doesn't exist!");
+    }
+}
+
+pub fn update_user(username: &str, f: &impl Fn(&mut User)) {
+    let mut users = get_user();
+    if let Some(user) = users.get_mut(username) {
+        f(user);
+        save_users(&users)
+    } else {
+        println!("user doesn't exist!")
+    }
+}
+
+pub fn add_user(username: &str, password: &str, isAdmin: bool) {
+    let mut users = get_user();
+    if let Some(_) = users.get(username) {
+        println!("user with this username already exist!")
+    } else {
+        let new_user = User::new_is_admin(username, password, isAdmin);
+        users.insert(username.to_string(), new_user);
+        save_users(&users)
     }
 }
 
