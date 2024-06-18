@@ -1,3 +1,4 @@
+use authentication::{get_user, hash_password, User};
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -17,7 +18,8 @@ enum Commands {
         /// User's password (plaintext)
         password: String,
         /// Is user Admin or regular User
-        is_admin: bool
+        #[arg(long)]
+        is_admin: Option<bool>
     },
     /// Delete user from login manager
     Delete {
@@ -37,10 +39,26 @@ enum Commands {
 fn main() {
     let parser = App::parse();
     match parser.command {
-        Some(Commands::List) => {}
-        Some(Commands::AddUser { username, password, is_admin }) => {}
-        Some(Commands::Delete { username }) => {}
-        Some(Commands::UpdatePassword { username, new_password }) => {}
+        Some(Commands::List) => {
+            println!("{:=<40}", "=");
+            println!("{:<20}{:<20}", "Username", "Role");
+            println!("{:=<40}", "=");
+            get_user()
+            .iter()
+            .for_each(|user| println!("{:<20}{:<20?}", user.1.username, user.1.role));
+            println!("{:=<40}", "=");
+        }
+        Some(Commands::AddUser { username, password, is_admin }) => {
+            authentication::add_user(&username, &password, is_admin.unwrap_or(false))
+        }
+        Some(Commands::Delete { username }) => {
+            authentication::delete_user(&username)
+        }
+        Some(Commands::UpdatePassword { username, new_password }) => {
+            authentication::update_user(&username, &|user: &mut User| {
+                user.password.clone_from(&hash_password(&new_password));
+            })
+        }
         None => {
             println!("use --help to get option list.")
         }

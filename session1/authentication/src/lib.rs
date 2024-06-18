@@ -40,11 +40,11 @@ impl User {
         }
     }
 
-    pub fn new_is_admin(username: &str, password: &str, isAdmin: bool) -> User {
+    pub fn new_is_admin(username: &str, password: &str, is_admin: bool) -> User {
         Self {
             username: username.to_string(),
             password: hash_password(password),
-            role: if isAdmin {LoginRole::Admin} else {LoginRole::User}
+            role: if is_admin {LoginRole::Admin} else {LoginRole::User}
         }
     }
 }
@@ -56,7 +56,7 @@ fn get_admins() -> HashMap<String, User> {
     .collect()
 }
 
-fn hash_password(password: &str) -> String {
+pub fn hash_password(password: &str) -> String {
     use sha2::Digest;
     let mut hasher = Sha256::new();
     hasher.update(password);
@@ -115,12 +115,12 @@ pub fn update_user(username: &str, f: &impl Fn(&mut User)) {
     }
 }
 
-pub fn add_user(username: &str, password: &str, isAdmin: bool) {
+pub fn add_user(username: &str, password: &str, is_admin: bool) {
     let mut users = get_user();
     if let Some(_) = users.get(username) {
         println!("user with this username already exist!")
     } else {
-        let new_user = User::new_is_admin(username, password, isAdmin);
+        let new_user = User::new_is_admin(username, password, is_admin);
         users.insert(username.to_string(), new_user);
         save_users(&users)
     }
