@@ -13,5 +13,5 @@ edition = "2021"
     "session1/login", 
     "session1/login_manager",
     "session2/hello_thread",
-    "session2/divide_work",
+    "session2/divide_work", "session2/thread_builder",
 ]
