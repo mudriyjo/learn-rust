@@ -17,4 +17,5 @@ edition = "2021"
     "session2/thread_builder",
     "session2/scoped_thread",
     "session2/atomic",
+    "session2/mutex",
 ]
