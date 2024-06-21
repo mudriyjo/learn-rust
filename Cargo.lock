@@ -242,6 +242,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "rwlock"
+version = "0.1.0"
+
+[[package]]
 name = "ryu"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
