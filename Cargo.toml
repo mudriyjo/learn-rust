@@ -24,4 +24,5 @@ edition = "2021"
     "session2/thread_parking",
     "session2/channels",
     "session2/worker",
+    "session2/worker_queue",
 ]
