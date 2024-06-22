@@ -19,4 +19,5 @@ edition = "2021"
     "session2/atomic",
     "session2/mutex",
     "session2/rwlock",
+    "session2/multithreading_issues",
 ]
