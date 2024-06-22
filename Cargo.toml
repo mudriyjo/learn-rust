@@ -25,4 +25,5 @@ edition = "2021"
     "session2/channels",
     "session2/worker",
     "session2/worker_queue",
+    "session2/thread_affinity",
 ]
