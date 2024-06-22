@@ -27,4 +27,5 @@ edition = "2021"
     "session2/worker_queue",
     "session2/thread_affinity",
     "session2/thread_priority",
+    "session2/rayon_iter",
 ]
