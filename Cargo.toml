@@ -22,4 +22,5 @@ edition = "2021"
     "session2/multithreading_issues",
     "session2/lock_free",
     "session2/thread_parking",
+    "session2/channels",
 ]
