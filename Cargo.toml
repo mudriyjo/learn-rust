@@ -30,5 +30,6 @@ edition = "2021"
     "session2/rayon_iter",
     "session2/rayon_scope",
     "session3/async_hello",
-    "session3/tokio_hello", "session3/async_blocking",
+    "session3/tokio_hello",
+    "session3/async_blocking",
 ]
