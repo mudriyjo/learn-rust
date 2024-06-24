@@ -33,4 +33,5 @@ edition = "2021"
     "session3/tokio_hello",
     "session3/async_blocking",
     "session3/tokio_test",
+    "session3/errors",
 ]
