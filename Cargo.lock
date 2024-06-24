@@ -67,6 +67,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_blocking"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "async_hello"
 version = "0.1.0"
 dependencies = [
