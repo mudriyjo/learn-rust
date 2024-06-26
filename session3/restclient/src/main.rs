@@ -1,4 +1,5 @@
 use serde_derive::{Deserialize, Serialize};
+use tokio::{io::{AsyncReadExt, AsyncWriteExt}, net::TcpListener};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct User {
@@ -13,7 +14,7 @@ struct User {
 struct Address {
     street: String,
     city: String,
-    zipcode: String
+    zipcode: String,
 }
 
 #[tokio::main]
@@ -25,5 +26,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
 
     println!("{resp:#?}");
+
+    tcp_server().await;
     Ok(())
+}
+
+async fn tcp_server() {
+    let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+    loop {
+        let (mut tcp_stream, addr) = listener.accept().await.unwrap();
+        tokio::spawn(async move {
+            let mut buf = [0; 1024];
+            let _ = tcp_stream.read(&mut buf).await;
+            let msg = String::from_utf8(buf.into_iter().filter(|el| el.is_ascii_alphanumeric()).collect::<Vec<_>>()).unwrap();
+            println!("readed: {:?}", msg);
+
+            if tcp_stream.write(&buf).await.is_ok() {
+                println!("msg send back...");
+            } else {
+                println!("problem to write msg to socket...")
+            }
+        });
+    }
 }
