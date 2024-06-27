@@ -1534,6 +1534,7 @@ dependencies = [
 name = "tokio_sync"
 version = "0.1.0"
 dependencies = [
+ "once_cell",
  "tokio",
 ]
 
