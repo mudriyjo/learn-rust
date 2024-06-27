@@ -38,4 +38,5 @@ once_cell = "1.19.0"
     "session3/tokio_io",
     "session3/restclient",
     "session3/tokio_sync",
+    "session3/tokio_select",
 ]
