@@ -36,4 +36,5 @@ edition = "2021"
     "session3/errors",
     "session3/tokio_io",
     "session3/restclient",
+    "session3/tokio_sync",
 ]
