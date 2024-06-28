@@ -1,4 +1,5 @@
-use sqlx::{pool, postgres::PgPoolOptions, prelude::FromRow, Decode, PgPool, Postgres};
+use futures::{StreamExt, TryStreamExt};
+use sqlx::{postgres::PgPoolOptions, prelude::FromRow, PgPool};
 
 // 1. .dotenv - Done
 // 2. install sqlx-cli - Done
@@ -6,8 +7,8 @@ use sqlx::{pool, postgres::PgPoolOptions, prelude::FromRow, Decode, PgPool, Post
 // 4. Create migration - Done
 // 5. Create pool, and make select from DB - Done
 // 6. Add derive FromRow to struct - Done
-// 7. Add streaming
-// 8. Add migration into code leve
+// 7. Add streaming - Done
+// 8. Add migration into code levev - Done
 // 9. Add CRUD for DB - Done
 #[derive(Debug, FromRow)]
 struct Message {
@@ -89,18 +90,25 @@ async fn main() -> anyhow::Result<()> {
     let is_deleted = delete_message_by_id(4, &pool).await?;
     println!("Is message deleted with id 4, {is_deleted}");
 
-    let is_inserted = insert_message(
-        Message {
-            id: 100,
-            message: "Big, big message...".to_string(),
-        },
-        &pool,
-    )
-    .await?;
-    println!("Is message inserted: {is_inserted:?}");
+    // let is_inserted = insert_message(
+    //     Message {
+    //         id: 100,
+    //         message: "Big, big message...".to_string(),
+    //     },
+    //     &pool,
+    // )
+    // .await?;
+    // println!("Is message inserted: {is_inserted:?}");
 
     let messages = get_all_message(&pool).await?;
     println!("All messages: {messages:?}");
+
+    let mut stream = sqlx::query_as!(Message, "SELECT id, message FROM messages")
+        .fetch(&pool);
+
+    while let Some(msg) = stream.try_next().await? {
+        println!("{msg:?}")
+    }
 
     Ok(())
 }
