@@ -1531,6 +1531,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio_pinning"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "tokio_select"
 version = "0.1.0"
 dependencies = [
