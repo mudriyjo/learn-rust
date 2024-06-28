@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.86"
+dotenv = "0.15.0"
 futures = "0.3.30"
 sqlx = { version = "0.7.4", features = ["runtime-tokio-native-tls", "sqlx-postgres"] }
 tokio = { version = "1.38.0", features = ["full"] }
