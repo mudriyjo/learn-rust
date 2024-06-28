@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hello world page</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <h1>Post page</h1>
+  <h2 id="message"></h2>
+  <script type="text/javascript">
+    function post() {
+        const element = document.querySelector('#message');
+        fetch("/post", {method: "POST"})
+            .then(response => response.json())
+            .then(data => element.innerHTML = data.message)
+    }
+    post()
+  </script>
+</body>
+
+</html>
