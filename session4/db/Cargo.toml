@@ -7,5 +7,5 @@ edition = "2021"
 anyhow = "1.0.86"
 dotenv = "0.15.0"
 futures = "0.3.30"
-sqlx = { version = "0.7.4", features = ["runtime-tokio-native-tls", "sqlx-postgres"] }
+sqlx = { version = "0.7.4", features = ["runtime-tokio-native-tls", "sqlx-postgres", "postgres"] }
 tokio = { version = "1.38.0", features = ["full"] }
