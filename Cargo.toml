@@ -40,5 +40,5 @@ once_cell = "1.19.0"
     "session3/tokio_sync",
     "session3/tokio_select",
     "session3/tokio_pinning",
-    "session4/logspan",
+    "session4/logspan", "session4/db",
 ]
