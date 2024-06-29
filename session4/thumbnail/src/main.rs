@@ -29,6 +29,7 @@ use tokio::net::TcpListener;
  15. Add file to redirect post after upload image - redirect.html
  16. Add search form into index.html - post /search form + implement fn search_images + add route
  17. Using place holder into form to replace it by find images in DB into search.html
+ 18. Change layer/extension to state for more safety
 */
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
