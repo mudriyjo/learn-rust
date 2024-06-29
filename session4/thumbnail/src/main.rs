@@ -1,3 +1,5 @@
+use sqlx::PgPool;
+
 /*
  GET '/' Display upload form
  GET '/image' - return json list of all images
@@ -26,6 +28,19 @@
  16. Add search form into index.html - post /search form + implement fn search_images + add route
  17. Using place holder into form to replace it by find images in DB into search.html
 */
-fn main() {
-    println!("Hello, world!");
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // init better stack trasing
+    color_eyre::install().unwrap();
+
+    dotenv::dotenv()?;
+    let db_url = std::env::var("DATABASE_URL")?;
+    let pool = PgPool::connect(&db_url).await?;
+
+    // Perform migration
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await?;
+
+    Ok(())
 }
