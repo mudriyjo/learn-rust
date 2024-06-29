@@ -1,4 +1,6 @@
+use axum::{routing::get, Extension};
 use sqlx::PgPool;
+use tokio::net::TcpListener;
 
 /*
  GET '/' Display upload form
@@ -8,10 +10,10 @@ use sqlx::PgPool;
  GET '/thum/{id}' - Display single thumbnail
  POST '/search' - Seach image by name
  TODO
- 0.0 Logging all error into tracing lib
- 0. Create env
- 1. Create DB
- 2. Create initial Schema (migration) Image -> id, name
+ 0.0 Logging all error into tracing lib - Done
+ 0. Create env - Done
+ 1. Create DB - DOne
+ 2. Create initial Schema (migration) Image -> id, name - Done
  3. Share pool acros axum
  4. implement test connection to DB test selecting images and return number of images and mount to test route
  5. Create index.html to uplaod file post and name text form with multipart form + mount route + implement axum multipart extractor
@@ -35,12 +37,22 @@ async fn main() -> anyhow::Result<()> {
 
     dotenv::dotenv()?;
     let db_url = std::env::var("DATABASE_URL")?;
+    let server_port_address = std::env::var("SERVER")?;
     let pool = PgPool::connect(&db_url).await?;
 
     // Perform migration
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await?;
+    let connection = TcpListener::bind(server_port_address).await?;
+    let rounting = axum::Router::new()
+        .route("/", get(test))
+        .layer(Extension(pool));
 
+    axum::serve(connection, rounting).await?;
     Ok(())
+}
+
+async fn test() -> &'static str {
+    "Ok"
 }
