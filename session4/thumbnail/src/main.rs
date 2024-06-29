@@ -12,9 +12,9 @@ use tokio::net::TcpListener;
  TODO
  0.0 Logging all error into tracing lib - Done
  0. Create env - Done
- 1. Create DB - DOne
+ 1. Create DB - Done
  2. Create initial Schema (migration) Image -> id, name - Done
- 3. Share pool acros axum
+ 3. Share pool acros axum -> Done
  4. implement test connection to DB test selecting images and return number of images and mount to test route
  5. Create index.html to uplaod file post and name text form with multipart form + mount route + implement axum multipart extractor
  6. Save image in upload route to DB with returning id number. Image byte should save in disk to image dir. And return redirect step 15
