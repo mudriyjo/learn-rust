@@ -37,8 +37,8 @@ pub mod errors;
  10. Done - Before starting server start fn that check missing thumbnails
  11. Done - When we save new image we should create thumbanil
  12. Done - Write function that return Json<Vec<ImageRecord>> + create handler and route for this
- 13. Create route and handler to retrieve thumbnail
- 14. Create html to display thumbnail image which show thumnails with link to full image
+ 13. Done - Create route and handler to retrieve thumbnail
+ 14. Done - Create html to display thumbnail image which show thumbnails with link to full image
  15. Done - Add file to redirect post after upload image - redirect.html
  16. Add search form into index.html - post /search form + implement fn search_images + add route
  17. Using place holder into form to replace it by find images in DB into search.html
@@ -70,6 +70,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/upload", post(file_upload))
         .route("/image", get(get_all_images))
         .route("/image/:id", get(get_image))
+        .route("/thum/:id", get(get_thumbnail))
         .layer(Extension(pool));
 
     axum::serve(connection, rounting).await?;
@@ -78,10 +79,11 @@ async fn main() -> anyhow::Result<()> {
 /*
 UTILITY
 */
+// TODO REFACTORE THIS
 async fn return_file(file_name: &str) -> Result<Html<String>, AppError> {
     let full_path = format!("./src/resources/{}", file_name);
     let index_path = std::path::Path::new(&full_path);
-    let file_content = tokio::fs::read_to_string(index_path).await?;
+    let file_content: String = tokio::fs::read_to_string(index_path).await?;
     Ok(Html(file_content))
 }
 
@@ -113,17 +115,54 @@ async fn recreate_all_thumbnails() -> Result<(), AppError> {
             }
             Ok(acc)
         });
-    
-    let result_image_without_thumbnails: HashMap<i32, Vec<String>> = image_without_thumbnails?.into_iter().filter(|entry| entry.1.len() < 2).collect();
-    
-    result_image_without_thumbnails.into_iter().for_each(|entry| {
-        tokio::spawn(async move {
-            let _ = make_thumbnail(entry.0).await;
+
+    let result_image_without_thumbnails: HashMap<i32, Vec<String>> = image_without_thumbnails?
+        .into_iter()
+        .filter(|entry| entry.1.len() < 2)
+        .collect();
+
+    result_image_without_thumbnails
+        .into_iter()
+        .for_each(|entry| {
+            tokio::spawn(async move {
+                let _ = make_thumbnail(entry.0).await;
+            });
         });
-    });
     Ok(())
 }
 
+async fn prepare_thumbnails_html(
+    content: String,
+    pool: Pool<Postgres>,
+) -> Result<String, AppError> {
+    let images = sqlx::query_as!(ImageRecord, "SELECT id, name FROM image")
+        .fetch_all(&pool)
+        .await?;
+
+    let html_template = "
+        <div class=\"col\">
+        <a href=\"{image_src}\"><img src=\"{thumb_src}\" class=\"img-thumbnail\" alt=\"{thumb_name}\"></a>
+        <p>{thumb_name}</p>
+        </div>";
+
+    let change: Result<String, AppError> =
+        images.into_iter().try_fold(String::new(), |mut acc, el| {
+            let src = format!("/thum/{}", el.id);
+            let img = format!("/image/{}", el.id);
+            acc.push_str(
+                &html_template
+                    .replace("{thumb_src}", &src)
+                    .replace("{thumb_name}", &el.name)
+                    .replace("{image_src}", &img),
+            );
+            Ok(acc)
+        });
+    let res = format!(
+        "<div class=\"component\"><div class=\"row\">{}</div></div>",
+        change?
+    );
+    Ok(content.replace("{THUMBNAILS}", &res))
+}
 /*
 GET ALL IMAGES
 */
@@ -133,7 +172,9 @@ struct ImageRecord {
     name: String,
 }
 
-async fn get_all_images(Extension(pool): Extension<Pool<Postgres>>) -> Result<Json<Vec<ImageRecord>>, AppError>{
+async fn get_all_images(
+    Extension(pool): Extension<Pool<Postgres>>,
+) -> Result<Json<Vec<ImageRecord>>, AppError> {
     let images = sqlx::query_as!(ImageRecord, "SELECT id, name FROM image")
         .fetch_all(&pool)
         .await?;
@@ -157,10 +198,31 @@ async fn get_image(Path(id): Path<i64>) -> Result<impl IntoResponse, AppError> {
     Ok((header, axum::body::Body::from_stream(stream)))
 }
 /*
+GET THUMBNAIL
+*/
+async fn get_thumbnail(Path(id): Path<i64>) -> Result<impl IntoResponse, AppError> {
+    let file_name = format!("thumbnail_{}.jpg", id);
+    let file_header = format!("filename=images/{}", file_name);
+    let header = [
+        (header::CONTENT_TYPE, "image/jpeg".to_string()),
+        (header::CONTENT_DISPOSITION, file_header),
+    ];
+
+    let full_path = format!("./src/upload/{}", file_name);
+    let image_file = tokio::fs::File::open(full_path).await?;
+    let stream = ReaderStream::new(image_file);
+    Ok((header, axum::body::Body::from_stream(stream)))
+}
+/*
 IMAGE UPLOAD
 */
-async fn index() -> Result<Html<String>, AppError> {
-    return_file("index.html").await
+// TODO REFACTO THIS
+async fn index(Extension(pool): Extension<Pool<Postgres>>) -> Result<Html<String>, AppError> {
+    let full_path = "./src/resources/index.html";
+    let index_path = std::path::Path::new(full_path);
+    let file_content: String = tokio::fs::read_to_string(index_path).await?;
+    let content = prepare_thumbnails_html(file_content, pool).await?;
+    Ok(Html(content))
 }
 
 async fn file_upload(
