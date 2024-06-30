@@ -22,11 +22,11 @@ pub mod errors;
  4. Implement test connection to DB test selecting images and return number of images and mount to test route - Done
  5. Create index.html to uplaod file post and name text form with multipart form + mount route + implement axum multipart extractor - Done
  6. Save image in upload route to DB with returning id number. Image byte should save in disk to image dir. And return redirect step 15 - Done
- 7. Implement get image by id handler + route + return StreamBody(ReaderStream(file))
- 8. Implement making thumbnail (100x100) function
+ 7. Implement get image by id handler + route + return StreamBody(ReaderStream(file)) - Done
+ 8. Implement making thumbnail (100x100) function - Done
  9. Implement fn that look at all images and find what image lost thumbnail and generate it (in separate process tokio:spwan)
  10. Before starting server start fn that check missing thumbnails
- 11. When we save new image we should create thumbanil
+ 11. When we save new image we should create thumbanil - Done
  12. Write function that return Json<Vec<ImageRecord>> + create handler and route for this
  13. Create route and handler to retrieve thumbnail
  14. Create html to display thumbnail image which show thumnails with link to full image
@@ -71,6 +71,14 @@ async fn return_file(file_name: &str) -> Result<Html<String>, AppError> {
     Ok(Html(file_content))
 }
 
+async fn make_thumbnail(id: i32) -> Result<(), AppError> {
+    let image_name = format!("{}.jpg", id);
+    let full_image_path = format!("./src/upload/{}",image_name);
+    let full_thumbnail_path = format!("./src/upload/thumbnail_{}.jpg",id);
+    let res = image::open(full_image_path)?.resize(100, 100, image::imageops::FilterType::Triangle);
+    res.save(full_thumbnail_path)?;
+    Ok(())
+}
 /*
 GET IMAGE
 */
@@ -116,7 +124,6 @@ async fn file_upload(
     }
 
     store_image(image_name, image_bytes, pool).await?;
-
     return_file("redirect.html").await
 }
 
@@ -133,6 +140,7 @@ async fn store_image(
             .id;
 
         tokio::fs::write(&upload_path.join(format!("{}.jpg", image_id)), img_bytes).await?;
+        make_thumbnail(image_id).await?;
         Ok(())
     } else {
         Err(AppError(anyhow::Error::msg(
