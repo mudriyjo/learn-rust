@@ -72,11 +72,13 @@ async fn index() -> Result<Html<String>, AppError> {
     Ok(Html(file_content))
 }
 
-async fn file_upload(Extension(pool): Extension<Pool<Postgres>>, mut multipart: Multipart) -> Result<Html<String>, AppError> {
-    let upload_path = std::path::Path::new("./src/upload/");
+async fn file_upload(
+    Extension(pool): Extension<Pool<Postgres>>,
+    mut multipart: Multipart,
+) -> Result<Html<String>, AppError> {
     let mut image_name: Option<String> = None;
     let mut image_bytes: Option<Vec<u8>> = None;
-    while let Some(mut field) = multipart.next_field().await.unwrap() {
+    while let Some(field) = multipart.next_field().await.unwrap() {
         let name = field.name().unwrap().to_string();
         let data = field.bytes().await.unwrap();
         match name.as_str() {
@@ -91,22 +93,38 @@ async fn file_upload(Extension(pool): Extension<Pool<Postgres>>, mut multipart: 
         }
     }
 
-    if image_name.is_none() || image_bytes.is_none() {
-        return Err(AppError(anyhow::Error::msg(
-            "Form doesn't contain key fields: title and image"
-        )))
-    }
-
-    let image_id = sqlx::query!("INSERT INTO image (name) VALUES ($1) RETURNING id", image_name)
-        .fetch_one(&pool)
-        .await?
-        .id;
-
-    tokio::fs::write(&upload_path.join(format!("{}.jpg", image_id)), image_bytes.unwrap()).await?;
+    store_image(image_name, image_bytes, pool).await?;
 
     Ok(Html("<h1>Ok</h1>".to_string()))
 }
 
+async fn store_image(
+    image_name: Option<String>,
+    image_bytes: Option<Vec<u8>>,
+    pool: Pool<Postgres>,
+) -> Result<(), AppError> {
+    if let (Some(name), Some(img_bytes)) = (image_name, image_bytes) {
+        let upload_path = std::path::Path::new("./src/upload/");
+        let image_id = sqlx::query!(
+            "INSERT INTO image (name) VALUES ($1) RETURNING id",
+            name
+        )
+        .fetch_one(&pool)
+        .await?
+        .id;
+
+        tokio::fs::write(
+            &upload_path.join(format!("{}.jpg", image_id)),
+            img_bytes,
+        )
+        .await?;
+        Ok(())
+    } else {
+        Err(AppError(anyhow::Error::msg(
+            "Form doesn't contain key fields: title and image",
+        )))
+    }
+}
 /*
 COUNT IMAGE
 */
