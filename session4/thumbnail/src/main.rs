@@ -1,5 +1,4 @@
-use anyhow::Error;
-use axum::{routing::get, Extension};
+use axum::{response::Html, routing::{get, post}, Extension};
 use errors::app_error::AppError;
 use sqlx::{PgPool, Pool, Postgres};
 use tokio::net::TcpListener;
@@ -36,6 +35,8 @@ pub mod errors;
 */
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // init tracing
+    tracing_subscriber::fmt().init();
     // init better stack trasing
     color_eyre::install().unwrap();
 
@@ -49,12 +50,33 @@ async fn main() -> anyhow::Result<()> {
     let connection = TcpListener::bind(server_port_address).await?;
     let rounting = axum::Router::new()
         .route("/", get(test_connection))
+        .route("/index", get(index))
+        .route("/upload", post(file_upload))
         .layer(Extension(pool));
 
     axum::serve(connection, rounting).await?;
     Ok(())
 }
 
+/*
+FILE UPLOAD
+*/
+async fn index() -> Result<Html<String>, AppError> {
+    let index_path = std::path::Path::new("./src/resources/index.html");
+    let file_content = tokio::fs::read_to_string(index_path).await?;
+    Ok(Html(file_content))
+}
+
+async fn file_upload() -> Result<Html<String>, AppError> {
+    let upload_path = std::path::Path::new("./src/upload/");
+    tracing::info!("{}",path.to_str().unwrap().to_string());
+    let file_content = tokio::fs::read_to_string(path).await?;
+    Ok(Html(file_content))
+}
+
+/*
+COUNT IMAGE
+*/
 async fn test_connection(Extension(pool): Extension<Pool<Postgres>>) -> Result<String, AppError> {
     let record = sqlx::query!("SELECT COUNT(id) FROM image")
         .fetch_one(&pool)
@@ -62,8 +84,12 @@ async fn test_connection(Extension(pool): Extension<Pool<Postgres>>) -> Result<S
 
     match record.count {
         Some(cnt) => Ok(format!("Count images: {}", cnt)),
-        None => Err(AppError(anyhow::Error::msg(
-            "Can't calculate images count...".to_string(),
-        ))),
+        None => {
+            tracing::error!("Can't calculate count in test_connection fn");
+
+            Err(AppError(anyhow::Error::msg(
+                "Can't calculate images count...".to_string(),
+            )))
+        }
     }
 }
