@@ -74,14 +74,14 @@ async fn index() -> Result<Html<String>, AppError> {
 
 async fn file_upload(Extension(pool): Extension<Pool<Postgres>>, mut multipart: Multipart) -> Result<Html<String>, AppError> {
     let upload_path = std::path::Path::new("./src/upload/");
-    let mut image_name: String = String::new();
-    let mut image_bytes: Vec<u8> = vec![];
+    let mut image_name: Option<String> = None;
+    let mut image_bytes: Option<Vec<u8>> = None;
     while let Some(mut field) = multipart.next_field().await.unwrap() {
         let name = field.name().unwrap().to_string();
         let data = field.bytes().await.unwrap();
         match name.as_str() {
-            "name" => image_name = String::from_utf8(data.to_vec())?,
-            "image" => image_bytes = data.to_vec(),
+            "name" => image_name = Some(String::from_utf8(data.to_vec())?),
+            "image" => image_bytes = Some(data.to_vec()),
             field_name => {
                 return Err(AppError(anyhow::Error::msg(format!(
                     "file uplaod doesn't support next field: {}",
@@ -91,7 +91,7 @@ async fn file_upload(Extension(pool): Extension<Pool<Postgres>>, mut multipart: 
         }
     }
 
-    if image_name.is_empty() || image_bytes.is_empty() {
+    if image_name.is_none() || image_bytes.is_none() {
         return Err(AppError(anyhow::Error::msg(
             "Form doesn't contain key fields: title and image"
         )))
@@ -102,7 +102,7 @@ async fn file_upload(Extension(pool): Extension<Pool<Postgres>>, mut multipart: 
         .await?
         .id;
 
-    tokio::fs::write(&upload_path.join(format!("{}.jpg", image_id)), image_bytes).await?;
+    tokio::fs::write(&upload_path.join(format!("{}.jpg", image_id)), image_bytes.unwrap()).await?;
 
     Ok(Html("<h1>Ok</h1>".to_string()))
 }
