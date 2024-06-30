@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use axum::{
-    body::Body,
     extract::{Multipart, Path},
     http::header,
     response::{Html, IntoResponse},
@@ -280,7 +279,7 @@ async fn test_connection(Extension(pool): Extension<Pool<Postgres>>) -> Result<S
         .await?;
 
     match record.count {
-        Some(cnt) => Ok(format!("Count images: {}", cnt)),
+        Some(cnt) => Ok(format!("Total images: {}", cnt)),
         None => {
             tracing::error!("Can't calculate count in test_connection fn");
             AppError::new("Can't calculate images count...".to_string())
