@@ -1,8 +1,9 @@
 use anyhow::Error;
-use axum::{http::StatusCode, response::IntoResponse, routing::get, Extension};
+use axum::{routing::get, Extension};
+use errors::app_error::AppError;
 use sqlx::{PgPool, Pool, Postgres};
 use tokio::net::TcpListener;
-
+pub mod errors;
 /*
  GET '/' Display upload form
  GET '/image' - return json list of all images
@@ -52,27 +53,6 @@ async fn main() -> anyhow::Result<()> {
 
     axum::serve(connection, rounting).await?;
     Ok(())
-}
-
-struct AppError(anyhow::Error);
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> axum::response::Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Something went wrong, {}", self.0),
-        )
-            .into_response()
-    }
-}
-
-impl<E> From<E> for AppError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(value: E) -> Self {
-        Self(value.into())
-    }
 }
 
 async fn test_connection(Extension(pool): Extension<Pool<Postgres>>) -> Result<String, AppError> {
