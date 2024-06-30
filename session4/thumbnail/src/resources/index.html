@@ -14,15 +14,16 @@
 
   <body>
     <div class="container">
-    <div class="mb-3">
-      <h1>Upload file</h1>
-      <form method="post" action="/upload" enctype="multipart/form-data">
-        <label for="title" class="form-label">Title:</label>
-        <input type="text" class="form-control" name="title" /><br />
-        <label for="files" class="form-label">Select files</label>
-        <input id="file" class="form-control" type="file" multiple /><br/>
-        <input  class="btn btn-primary" type="submit" />
-      </form>
+      <div class="mb-3">
+        <h1>Upload file</h1>
+        <form method="post" action="/upload" enctype="multipart/form-data">
+          <label for="title" class="form-label">Title:</label>
+          <input type="text" class="form-control" name="name" /><br />
+          <label for="files" class="form-label">Select files</label>
+          <input id="file" class="form-control" type="file"
+            name="image" /><br />
+          <input class="btn btn-primary" type="submit" />
+        </form>
       </div>
     </div>
   </body>

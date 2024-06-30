@@ -1,4 +1,9 @@
-use axum::{response::Html, routing::{get, post}, Extension};
+use axum::{
+    extract::Multipart,
+    response::Html,
+    routing::{get, post},
+    Extension,
+};
 use errors::app_error::AppError;
 use sqlx::{PgPool, Pool, Postgres};
 use tokio::net::TcpListener;
@@ -67,11 +72,39 @@ async fn index() -> Result<Html<String>, AppError> {
     Ok(Html(file_content))
 }
 
-async fn file_upload() -> Result<Html<String>, AppError> {
+async fn file_upload(Extension(pool): Extension<Pool<Postgres>>, mut multipart: Multipart) -> Result<Html<String>, AppError> {
     let upload_path = std::path::Path::new("./src/upload/");
-    tracing::info!("{}",path.to_str().unwrap().to_string());
-    let file_content = tokio::fs::read_to_string(path).await?;
-    Ok(Html(file_content))
+    let mut image_name: String = String::new();
+    let mut image_bytes: Vec<u8> = vec![];
+    while let Some(mut field) = multipart.next_field().await.unwrap() {
+        let name = field.name().unwrap().to_string();
+        let data = field.bytes().await.unwrap();
+        match name.as_str() {
+            "name" => image_name = String::from_utf8(data.to_vec())?,
+            "image" => image_bytes = data.to_vec(),
+            field_name => {
+                return Err(AppError(anyhow::Error::msg(format!(
+                    "file uplaod doesn't support next field: {}",
+                    field_name
+                ))))
+            }
+        }
+    }
+
+    if image_name.is_empty() || image_bytes.is_empty() {
+        return Err(AppError(anyhow::Error::msg(
+            "Form doesn't contain key fields: title and image"
+        )))
+    }
+
+    let image_id = sqlx::query!("INSERT INTO image (name) VALUES ($1) RETURNING id", image_name)
+        .fetch_one(&pool)
+        .await?
+        .id;
+
+    tokio::fs::write(&upload_path.join(format!("{}.jpg", image_id)), image_bytes).await?;
+
+    Ok(Html("<h1>Ok</h1>".to_string()))
 }
 
 /*
