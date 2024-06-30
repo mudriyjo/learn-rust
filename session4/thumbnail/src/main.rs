@@ -13,24 +13,25 @@ pub mod errors;
  GET '/image/:id' - Display single image
  GET '/thum/:id' - Display single thumbnail
  POST '/search' - Seach image by name
- TODO
- 0.0 Logging all error into tracing lib - Done
- 0. Create env - Done
- 1. Create DB - Done
- 2. Create initial Schema (migration) Image -> id, name - Done
- 3. Share pool acros axum -> Done
- 4. Implement test connection to DB test selecting images and return number of images and mount to test route - Done
- 5. Create index.html to uplaod file post and name text form with multipart form + mount route + implement axum multipart extractor - Done
- 6. Save image in upload route to DB with returning id number. Image byte should save in disk to image dir. And return redirect step 15 - Done
- 7. Implement get image by id handler + route + return StreamBody(ReaderStream(file)) - Done
- 8. Implement making thumbnail (100x100) function - Done
+ 
+ TODO LIST
+ 0. Done - Logging all error into tracing lib 
+ 0. Done - Create env 
+ 1. Done - Create DB 
+ 2. Done - Create initial Schema (migration) Image -> id, name 
+ 3. Done - Share pool acros axum
+ 4. Done - Implement test connection to DB test selecting images and return number of images and mount to test route 
+ 5. Done - Create index.html to uplaod file post and name text form with multipart form + mount route + implement axum multipart extractor 
+ 6. Done - Save image in upload route to DB with returning id number. Image byte should save in disk to image dir. And return redirect step 15 
+ 7. Done - Implement get image by id handler + route + return StreamBody(ReaderStream(file)) 
+ 8. Done - Implement making thumbnail (100x100) function 
  9. Implement fn that look at all images and find what image lost thumbnail and generate it (in separate process tokio:spwan)
  10. Before starting server start fn that check missing thumbnails
- 11. When we save new image we should create thumbanil - Done
+ 11. Done - When we save new image we should create thumbanil 
  12. Write function that return Json<Vec<ImageRecord>> + create handler and route for this
  13. Create route and handler to retrieve thumbnail
  14. Create html to display thumbnail image which show thumnails with link to full image
- 15. Add file to redirect post after upload image - redirect.html - Done
+ 15. Done - Add file to redirect post after upload image - redirect.html 
  16. Add search form into index.html - post /search form + implement fn search_images + add route
  17. Using place holder into form to replace it by find images in DB into search.html
  18. Change layer/extension to state for more safety
