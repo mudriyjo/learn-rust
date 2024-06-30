@@ -44,6 +44,7 @@ pub mod errors;
  17. Using place holder into form to replace it by find images in DB into search.html
  18. Change layer/extension to state for more safety
  19. Refactoring code
+ 20. Add working with HTML template
 */
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
