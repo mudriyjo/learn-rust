@@ -6,9 +6,10 @@ use axum::{
     http::header,
     response::{Html, IntoResponse},
     routing::{get, post},
-    Extension,
+    Extension, Json,
 };
 use errors::app_error::AppError;
+use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Pool, Postgres};
 use tokio::net::TcpListener;
 use tokio_util::io::ReaderStream;
@@ -35,7 +36,7 @@ pub mod errors;
  9. Done - Implement fn that look at all images and find what image lost thumbnail and generate it (in separate process tokio:spwan)
  10. Done - Before starting server start fn that check missing thumbnails
  11. Done - When we save new image we should create thumbanil
- 12. Write function that return Json<Vec<ImageRecord>> + create handler and route for this
+ 12. Done - Write function that return Json<Vec<ImageRecord>> + create handler and route for this
  13. Create route and handler to retrieve thumbnail
  14. Create html to display thumbnail image which show thumnails with link to full image
  15. Done - Add file to redirect post after upload image - redirect.html
@@ -67,6 +68,7 @@ async fn main() -> anyhow::Result<()> {
         // .route("/", get(test_connection))
         .route("/", get(index))
         .route("/upload", post(file_upload))
+        .route("/image", get(get_all_images))
         .route("/image/:id", get(get_image))
         .layer(Extension(pool));
 
@@ -120,6 +122,23 @@ async fn recreate_all_thumbnails() -> Result<(), AppError> {
         });
     });
     Ok(())
+}
+
+/*
+GET ALL IMAGES
+*/
+#[derive(Debug, Deserialize, Serialize)]
+struct ImageRecord {
+    id: i32,
+    name: String,
+}
+
+async fn get_all_images(Extension(pool): Extension<Pool<Postgres>>) -> Result<Json<Vec<ImageRecord>>, AppError>{
+    let images = sqlx::query_as!(ImageRecord, "SELECT id, name FROM image")
+        .fetch_all(&pool)
+        .await?;
+
+    Ok(Json(images))
 }
 /*
 GET IMAGE
