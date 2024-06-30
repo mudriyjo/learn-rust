@@ -1,5 +1,6 @@
 use axum::{http::StatusCode, response::IntoResponse};
 
+#[derive(Debug)]
 pub struct AppError(pub anyhow::Error);
 
 impl IntoResponse for AppError {
@@ -19,5 +20,10 @@ where
 {
     fn from(value: E) -> Self {
         Self(value.into())
+    }
+}
+impl AppError {
+    pub fn new<T>(msg: String) -> Result<T, AppError> {
+        Err(AppError(anyhow::Error::msg(msg)))
     }
 }
