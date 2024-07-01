@@ -19,9 +19,17 @@
         {THUMBNAILS}
       </div>
       <div class="mb-3">
+        <h1>Image search</h1>
+        <form method="post" action="/search" enctype="text/plain">
+          <label for="title" class="form-label">Search name:</label>
+          <input type="text" class="form-control" name="name" /><br />
+          <input class="btn btn-primary" type="submit" />
+        </form>
+      </div>
+      <div class="mb-3">
         <h1>Upload file</h1>
         <form method="post" action="/upload" enctype="multipart/form-data">
-          <label for="title" class="form-label">Title:</label>
+          <label for="title" class="form-label">Name:</label>
           <input type="text" class="form-control" name="name" /><br />
           <label for="files" class="form-label">Select files</label>
           <input id="file" class="form-control" type="file"
