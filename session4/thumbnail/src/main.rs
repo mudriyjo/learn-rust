@@ -46,7 +46,7 @@ pub mod errors;
  20. Add working with HTML template
 */
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<(), AppError> {
     // init tracing
     tracing_subscriber::fmt().init();
     // init better stack trasing
@@ -55,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv::dotenv()?;
 
     // Recreate all thumbnail
-    recreate_all_thumbnails().await;
+    recreate_all_thumbnails().await?;
 
     let db_url = std::env::var("DATABASE_URL")?;
     let server_port_address = std::env::var("SERVER")?;
