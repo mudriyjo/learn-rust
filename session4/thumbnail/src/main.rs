@@ -5,7 +5,7 @@ use axum::{
     http::header,
     response::{Html, IntoResponse},
     routing::{get, post},
-    Extension, Json,
+    Extension, Form, Json,
 };
 use errors::app_error::AppError;
 use serde::{Deserialize, Serialize};
@@ -39,8 +39,8 @@ pub mod errors;
  13. Done - Create route and handler to retrieve thumbnail
  14. Done - Create html to display thumbnail image which show thumbnails with link to full image
  15. Done - Add file to redirect post after upload image - redirect.html
- 16. Add search form into index.html - post /search form + implement fn search_images + add route
- 17. Using place holder into form to replace it by find images in DB into search.html
+ 16. Done - Add search form into index.html - post /search form + implement fn search_images + add route
+ 17. Done - Using place holder into form to replace it by find images in DB into search.html
  18. Change layer/extension to state for more safety
  19. Refactoring code
  20. Add working with HTML template
@@ -71,6 +71,7 @@ async fn main() -> Result<(), AppError> {
         .route("/image", get(get_all_images))
         .route("/image/:id", get(get_image))
         .route("/thum/:id", get(get_thumbnail))
+        .route("/search", post(search))
         .layer(Extension(pool));
 
     axum::serve(connection, rounting).await?;
@@ -130,15 +131,10 @@ async fn recreate_all_thumbnails() -> Result<(), AppError> {
         });
     Ok(())
 }
-
-async fn prepare_thumbnails_html(
+async fn prepare_thumbnails_html_from_imgs(
     content: String,
-    pool: Pool<Postgres>,
+    images: Vec<ImageRecord>,
 ) -> Result<String, AppError> {
-    let images = sqlx::query_as!(ImageRecord, "SELECT id, name FROM image")
-        .fetch_all(&pool)
-        .await?;
-
     let html_template = "
         <div class=\"col\">
         <a href=\"{image_src}\"><img src=\"{thumb_src}\" class=\"img-thumbnail\" alt=\"{thumb_name}\"></a>
@@ -162,6 +158,44 @@ async fn prepare_thumbnails_html(
         change?
     );
     Ok(content.replace("{THUMBNAILS}", &res))
+}
+
+async fn prepare_thumbnails_html(
+    content: String,
+    pool: Pool<Postgres>,
+) -> Result<String, AppError> {
+    let images = sqlx::query_as!(ImageRecord, "SELECT id, name FROM image")
+        .fetch_all(&pool)
+        .await?;
+
+    prepare_thumbnails_html_from_imgs(content, images).await
+}
+/*
+SEARCH IMAGE BY NAME
+*/
+#[derive(Debug, Deserialize, Serialize)]
+struct SearchImage {
+    pub search_name: String,
+}
+
+async fn search(
+    Extension(pool): Extension<Pool<Postgres>>,
+    Form(search_image): Form<SearchImage>,
+) -> Result<Html<String>, AppError> {
+    let full_path = "./src/resources/search_result.html";
+    let index_path = std::path::Path::new(full_path);
+    let file_content: String = tokio::fs::read_to_string(index_path).await?;
+    let search_criteria = format!("%{}%", search_image.search_name);
+    let images = sqlx::query_as!(
+        ImageRecord,
+        "SELECT id, name FROM image WHERE name LIKE $1",
+        search_criteria
+    )
+    .fetch_all(&pool)
+    .await?;
+
+    let content = prepare_thumbnails_html_from_imgs(file_content, images).await?;
+    Ok(Html(content))
 }
 /*
 GET ALL IMAGES
