@@ -46,4 +46,5 @@ once_cell = "1.19.0"
     "session4/thumbnail",
     "session4/memory",
     "session4/drop",
+    "session4/rc_arc",
 ]
