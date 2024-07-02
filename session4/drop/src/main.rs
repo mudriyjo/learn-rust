@@ -14,5 +14,8 @@ impl Drop for MyStrunc {
 }
 fn main() {
     let x = MyStrunc::new(1);
+    {
+        let y = MyStrunc::new(2);
+    }
     println!("End of main function...");
 }
