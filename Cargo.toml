@@ -44,5 +44,5 @@ once_cell = "1.19.0"
     "session4/db",
     "session4/web_server",
     "session4/thumbnail",
-    "session4/memory",
+    "session4/memory", "session4/drop",
 ]
