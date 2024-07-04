@@ -50,4 +50,5 @@ once_cell = "1.19.0"
     "session4/rc_arc",
     "session4/lifetimes",
     "session4/trait_example",
+    "session4/generics",
 ]
