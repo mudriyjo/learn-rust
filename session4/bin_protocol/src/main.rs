@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, fs::File, io::Write};
 
 use bytemuck::{Pod, Zeroable};
 
@@ -32,6 +32,34 @@ fn bytemuck_example() -> Result<(), Box<dyn Error>> {
     println!("Readed structure {:?}", my_struct);
     Ok(())
 }
-fn main(){
+
+struct MyNewStruct {
+    pub num: u32,
+    pub data: String,
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
     // bytemuck_example();
+
+    let my_new_struct = MyNewStruct {
+        num: 10,
+        data: "Hello world".to_string()
+    };
+
+    let mut file = File::create("./bin_my_struct.bin")?;
+    let num_bytes = my_new_struct.num.to_le_bytes();
+    let str_len = my_new_struct.data.len().to_le_bytes();
+    let str_data_bytes = my_new_struct.data.as_bytes();
+
+    file.write_all(&num_bytes)?;
+    file.write_all(&str_len)?;
+    file.write_all(str_data_bytes)?;
+
+    let file_bytes = std::fs::read("./bin_my_struct.bin")?;
+    let num = u32::from_le_bytes(file_bytes[0..4].try_into()?);
+    let str_len = usize::from_le_bytes(file_bytes[4..12].try_into()?);
+    let str_data = String::from_utf8(file_bytes[12..(12 + str_len)].to_vec())?;
+
+    println!("Result num: {}, data: {}", num, str_data);
+    Ok(())
 }
