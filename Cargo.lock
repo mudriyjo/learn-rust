@@ -1327,6 +1327,7 @@ dependencies = [
 name = "learn-rust"
 version = "0.1.0"
 dependencies = [
+ "lifetime",
  "once_cell",
 ]
 
@@ -1369,6 +1370,16 @@ dependencies = [
  "pkg-config",
  "vcpkg",
 ]
+
+[[package]]
+name = "lifetime"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b9ac39b3413a5c091fc208f8eb84d9bdb35b6ef8c84570bc2f6fa47a3ba948e"
+
+[[package]]
+name = "lifetimes"
+version = "0.1.0"
 
 [[package]]
 name = "linux-raw-sys"

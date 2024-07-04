@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+lifetime = "0.1.0"
 once_cell = "1.19.0"
 
 [workspace]
@@ -47,4 +48,5 @@ once_cell = "1.19.0"
     "session4/memory",
     "session4/drop",
     "session4/rc_arc",
+    "session4/lifetimes",
 ]
