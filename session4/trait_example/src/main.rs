@@ -1,5 +1,5 @@
 // 1. Done - Trait example
-// 2. Param in fn
+// 2. Done - Param in fn
 // 3. Param from fn
 // 4. Generic trait collection
 // 5. As_any example
@@ -22,9 +22,17 @@ impl Animal for Dog {
         println!("Woof!!!")
     }
 }
+
+fn say_twice(animal: impl Animal) {
+    animal.say();
+    animal.say();
+}
+
 fn main() {
     let cat = Cat;
     cat.say();
     let dog = Dog;
     dog.say();
+
+    say_twice(dog);
 }
