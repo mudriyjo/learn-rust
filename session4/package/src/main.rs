@@ -5,6 +5,7 @@ struct TwoByte {
     n: u16
 }
 
+// Not the best way, may cause some trouble
 #[repr(C)]
 struct ThreeByte {
     x: u16,
