@@ -33,6 +33,22 @@ fn create_animal() -> impl Animal {
     Cat
 }
 
+trait AnimalWithSize: Sized {
+    fn say(&self);
+}
+enum SizedAnimals {
+    SizedCat,
+    SizedDog,
+}
+
+impl AnimalWithSize for SizedAnimals {
+    fn say(&self) {
+        match &self {
+            Self::SizedCat => println!("MMMMMEOW"),
+            Self::SizedDog => println!("WOOOOEFFF"),
+        }
+    }
+}
 fn main() {
     let cat = Cat;
     cat.say();
@@ -47,4 +63,9 @@ fn main() {
     // We need Box and dyn cause we can't calculate size of trait in compile time
     let animals: Vec<Box<dyn Animal>> = vec![Box::new(cat), Box::new(dog)];
     animals.iter().for_each(|a| a.say());
+
+    let sized_cat = SizedAnimals::SizedCat;
+    let sized_dog = SizedAnimals::SizedDog;
+    let sized_animals: Vec<SizedAnimals> = vec![sized_cat, sized_dog];
+    sized_animals.iter().for_each(|a| a.say());
 }
