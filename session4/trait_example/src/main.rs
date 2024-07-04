@@ -1,4 +1,4 @@
-// 1. Trait example
+// 1. Done - Trait example
 // 2. Param in fn
 // 3. Param from fn
 // 4. Generic trait collection
