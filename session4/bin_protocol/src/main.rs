@@ -11,7 +11,8 @@ struct MyStruct {
     num: u32,
     data: [u8; 8],
 }
-fn main() -> Result<(), Box<dyn Error>> {
+
+fn bytemuck_example() -> Result<(), Box<dyn Error>> {
     let data = vec![
         MyStruct{
             num: 10,
@@ -30,4 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let my_struct: &[MyStruct] = bytemuck::cast_slice(&read);
     println!("Readed structure {:?}", my_struct);
     Ok(())
+}
+fn main(){
+    // bytemuck_example();
 }
