@@ -3,9 +3,9 @@
 // 3. Done - Param from fn
 // 4. Done - Generic trait collection
 // 5. Done - As_any example
-// 6. Operation overloading with Point type Output = Point;
+// 6. Done - Operation overloading with Point type Output = Point;
 
-use std::any::Any;
+use std::{any::Any, ops::Add};
 
 trait Animal {
     fn say(&self);
@@ -80,6 +80,29 @@ impl DowncastingAnimal for DowncatingDog {
     }
 }
 
+
+#[derive(Clone)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Add for Point {
+    type Output = Point;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Point {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl core::fmt::Display for Point {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Point(x: {}, y: {})", self.x, self.y)
+    }
+}
 fn main() {
     let cat = Cat;
     cat.say();
@@ -103,7 +126,8 @@ fn main() {
     // Downcasting example
     let downcasting_cat = DowncatingCat;
     let downcasting_dog = DowncatingDog;
-    let downcasting_animals: Vec<&dyn Any> = vec![downcasting_cat.as_any(), downcasting_dog.as_any()];
+    let downcasting_animals: Vec<&dyn Any> =
+        vec![downcasting_cat.as_any(), downcasting_dog.as_any()];
     downcasting_animals.iter().for_each(|a| {
         if let Some(animal) = a.downcast_ref::<DowncatingDog>() {
             println!("This is dog");
@@ -114,4 +138,8 @@ fn main() {
             animal.say();
         }
     });
+
+    let a = Point{x:1, y:2};
+    let b = Point{x:3, y:4};
+    println!("\na: {},\nb: {},\na + b: {}", a, b, a.clone() + b.clone());
 }
