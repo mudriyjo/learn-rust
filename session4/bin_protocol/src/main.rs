@@ -2,7 +2,7 @@ use std::error::Error;
 
 use bytemuck::{Pod, Zeroable};
 
-// 1. Implement bin encoding and save to file using bytemuck
+// 1. Done - Implement bin encoding and save to file using bytemuck
 // 2. Implement bin protocol save to file and read 
 //    it from file by order (separate struct fields) (using le_bytes)
 #[repr(C)]
