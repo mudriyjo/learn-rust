@@ -15,6 +15,10 @@ impl<'a> CatFeeder<'a> {
     }
 }
 
+fn lifetime_example<'a, 'b>(x: &'a i32, y: &'b i32) -> &'b i32 {
+    y
+}
+
 fn main() {
     let mut cats = vec![
         Cat("Jhony".to_string()),
