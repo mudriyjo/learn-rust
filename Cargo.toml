@@ -53,4 +53,5 @@ once_cell = "1.19.0"
     "session4/generics",
     "session4/package",
     "session4/bin_protocol",
+    "session5/protocol",
 ]
