@@ -9,6 +9,24 @@ Bytes        | Name           | Description
 End-4 to End | CRC32          | CRC32 checksum
 ===========================================================================================
 */
+const MAGIC_NUMBER: u8 = 2222;
+const VERSION_NUMBER: u16 = 1;
+enum CollectorCommand {
+    SubmitData {
+        collector_id: u128,
+        total_memory: u64,
+        used_memory: u64,
+        average_cpu_usage: f32,
+    }
+}
 fn main() {
     println!("Hello, world!");
+}
+
+pub fn encode_v1(command: CollectorCommand) -> (u32, Vec<u8>) {
+    vec![]
+}
+
+pub fn decode_v1(butes: Vec<u8>) -> CollectorCommand {
+    
 }
