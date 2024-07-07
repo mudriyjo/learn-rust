@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 /*
 Bytes        | Name           | Description
 ===========================================================================================
@@ -11,6 +13,8 @@ End-4 to End | CRC32          | CRC32 checksum
 */
 const MAGIC_NUMBER: u8 = 2222;
 const VERSION_NUMBER: u16 = 1;
+
+#[derive(Debug, Serialize, Deserialize)]
 enum CollectorCommand {
     SubmitData {
         collector_id: u128,
@@ -19,14 +23,22 @@ enum CollectorCommand {
         average_cpu_usage: f32,
     }
 }
-fn main() {
-    println!("Hello, world!");
-}
 
 pub fn encode_v1(command: CollectorCommand) -> (u32, Vec<u8>) {
-    vec![]
+    let command_str = serde_json::to_string(&command).expect("Can't deserialize Collector command");
+
 }
 
 pub fn decode_v1(butes: Vec<u8>) -> CollectorCommand {
     
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_exampe() {
+        assert_eq!(1,1);
+    }
 }
