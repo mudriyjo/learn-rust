@@ -18,7 +18,7 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
         sys.refresh_all();
         let now = Instant::now();
 
-        let total_memory = sys.available_memory();
+        let total_memory = sys.total_memory();
         let used_memory = sys.used_memory();
         let cpu_count = sys.cpus().len();
         let cpu_total_usage: f32 = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).sum();
@@ -52,14 +52,15 @@ fn main() {
         gathering_info(1, sender);
     });
 
-    // TODO single threaded -> change to multiply thread handling
     let tcp_listner = TcpListener::bind(DAEMON_ADDRESS).unwrap();
     while let Ok((mut socket, _addr)) = tcp_listner.accept() {
         if let Ok(command) = reciever.recv() {
-            let bytes = protocol::encode_v1(command);
-            if let Err(e) = socket.write_all(&bytes) {
-                println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
-            }
+            std::thread::spawn(move || {
+                let bytes = protocol::encode_v1(command);
+                if let Err(e) = socket.write_all(&bytes) {
+                    println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
+                }
+            });
         }
     }
 }
