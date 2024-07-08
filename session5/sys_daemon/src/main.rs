@@ -1,11 +1,11 @@
 use std::{
-    sync::mpsc::Sender,
-    thread,
-    time::{Duration, Instant},
+    io::{Read, Write}, net::TcpListener, sync::mpsc::{self, Sender}, thread, time::{Duration, Instant}
 };
 
 use protocol::CollectorCommand;
 use sysinfo::System;
+
+const DAEMON_ADDRESS: &'static str = "0.0.0.0:9444";
 
 fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
     let mut sys = System::new_all();
@@ -41,5 +41,20 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
 }
 
 fn main() {
-    println!("Hello, world!");
+    let (sender, reciever) = mpsc::channel::<CollectorCommand>();
+
+    std::thread::spawn(move || {
+        // TODO change id to getting from env
+        gathering_info(1, sender);
+    });
+
+    let tcp_listner = TcpListener::bind(DAEMON_ADDRESS).unwrap();
+    while let Ok((mut socket, _addr)) = tcp_listner.accept() {
+        if let Ok(command)  = reciever.recv() {
+            let bytes = protocol::encode_v1(command);
+            if let Err(e) = socket.write_all(&bytes) {
+                println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
+            }
+        }
+    }
 }
