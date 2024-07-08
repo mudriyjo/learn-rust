@@ -2765,6 +2765,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sys_server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "tokio",
+]
+
+[[package]]
 name = "sysinfo"
 version = "0.30.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"

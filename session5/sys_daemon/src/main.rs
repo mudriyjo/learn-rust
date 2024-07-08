@@ -44,11 +44,14 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
     }
 }
 
+// TODO 
+// 1. Change println to tracer
+// 2. Move send to function
+// 3. Change hardcoded collector id to getting it from env
 fn main() {
     let (sender, reciever) = mpsc::channel::<CollectorCommand>();
 
     std::thread::spawn(move || {
-        // TODO change id to getting from env
         gathering_info(1, sender);
     });
 
