@@ -1,5 +1,9 @@
 use std::{
-    io::{Read, Write}, net::TcpListener, sync::mpsc::{self, Sender}, thread, time::{Duration, Instant}
+    io::Write,
+    net::TcpListener,
+    sync::mpsc::{self, Sender},
+    thread,
+    time::{Duration, Instant},
 };
 
 use protocol::CollectorCommand;
@@ -48,9 +52,10 @@ fn main() {
         gathering_info(1, sender);
     });
 
+    // TODO single threaded -> change to multiply thread handling
     let tcp_listner = TcpListener::bind(DAEMON_ADDRESS).unwrap();
     while let Ok((mut socket, _addr)) = tcp_listner.accept() {
-        if let Ok(command)  = reciever.recv() {
+        if let Ok(command) = reciever.recv() {
             let bytes = protocol::encode_v1(command);
             if let Err(e) = socket.write_all(&bytes) {
                 println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
