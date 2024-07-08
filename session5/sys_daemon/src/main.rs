@@ -9,7 +9,7 @@ use std::{
 use protocol::CollectorCommand;
 use sysinfo::System;
 
-const DAEMON_ADDRESS: &'static str = "0.0.0.0:9444";
+const DAEMON_COLLECTOR_ADDRESS: &'static str = "0.0.0.0:9444";
 
 fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
     let mut sys = System::new_all();
@@ -52,15 +52,13 @@ fn main() {
         gathering_info(1, sender);
     });
 
-    let tcp_listner = TcpListener::bind(DAEMON_ADDRESS).unwrap();
+    let tcp_listner = TcpListener::bind(DAEMON_COLLECTOR_ADDRESS).unwrap();
     while let Ok((mut socket, _addr)) = tcp_listner.accept() {
         if let Ok(command) = reciever.recv() {
-            std::thread::spawn(move || {
                 let bytes = protocol::encode_v1(command);
                 if let Err(e) = socket.write_all(&bytes) {
                     println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
                 }
-            });
         }
     }
 }
