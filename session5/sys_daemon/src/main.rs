@@ -1,6 +1,6 @@
 use std::{
     io::Write,
-    net::TcpListener,
+    net::{TcpListener, TcpStream},
     sync::mpsc::{self, Sender},
     thread,
     time::{Duration, Instant},
@@ -44,7 +44,7 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
     }
 }
 
-// TODO 
+// TODO
 // 1. Change println to tracer
 // 2. Move send to function
 // 3. Change hardcoded collector id to getting it from env
@@ -55,13 +55,13 @@ fn main() {
         gathering_info(1, sender);
     });
 
-    let tcp_listner = TcpListener::bind(DAEMON_COLLECTOR_ADDRESS).unwrap();
-    while let Ok((mut socket, _addr)) = tcp_listner.accept() {
+    loop {
+        let mut tcp_stream = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS).unwrap();
         if let Ok(command) = reciever.recv() {
-                let bytes = protocol::encode_v1(command);
-                if let Err(e) = socket.write_all(&bytes) {
-                    println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
-                }
+            let bytes = protocol::encode_v1(command);
+            if let Err(e) = tcp_stream.write_all(&bytes) {
+                println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
+            }
         }
     }
 }
