@@ -8,3 +8,5 @@ protocol = {path = "../protocol"}
 anyhow = "1.0.86"
 tokio = { version = "1.38.0", features = ["full"] }
 chrono = "0.4.38"
+tracing-subscriber = "0.3.18"
+tracing = "0.1.40"

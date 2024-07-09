@@ -2826,6 +2826,8 @@ dependencies = [
  "chrono",
  "protocol",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
