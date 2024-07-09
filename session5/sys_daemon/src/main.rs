@@ -45,16 +45,19 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
 }
 
 fn send_command(reciever: &Receiver<CollectorCommand>) {
-    let mut tcp_stream = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS).unwrap();
+    if let Ok(mut tcp_stream) = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS) {
+        if let Ok(command) = reciever.recv() {
+            let bytes = protocol::encode_v1(command);
 
-    if let Ok(command) = reciever.recv() {
-        let bytes = protocol::encode_v1(command);
-        
-        tracing::info!("bytes send: {}", bytes.len());
+            tracing::info!("bytes send: {}", bytes.len());
 
-        if let Err(e) = tcp_stream.write_all(&bytes) {
-            tracing::error!("Can't write to the buffer 2048 Bytes size, error: {}", e)
+            if let Err(e) = tcp_stream.write_all(&bytes) {
+                tracing::error!("Can't write to the buffer 2048 Bytes size, error: {}", e)
+            }
         }
+    } else {
+        tracing::error!("Connection refused. Trying reconnect");
+        thread::sleep(Duration::from_secs(1));
     }
 }
 

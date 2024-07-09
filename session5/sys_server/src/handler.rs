@@ -27,7 +27,7 @@ pub async fn run_collection(bind_address: &str) -> anyhow::Result<()> {
     loop {
         if let Ok((stream, address)) = handler.accept().await {
             if let Err(e) = tokio::spawn(request_handle(stream, address)).await {
-                tracing::error!("Connection error: {}", e);    
+                tracing::error!("Connection error: {}", e);
             }
         } else {
             tracing::error!("Can't accept new connection...")
