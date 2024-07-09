@@ -32,7 +32,7 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
         };
 
         if let Err(e) = tx.send(command) {
-            println!("Get error when try to send command: {:?}", &e.0);
+            tracing::error!("Get error when try to send command: {:?}", &e.0);
         }
 
         let since_start = now.elapsed().as_secs_f32();
@@ -45,10 +45,11 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
 }
 
 // TODO
-// 1. Change println to tracer
-// 2. Move send to function
-// 3. Change hardcoded collector id to getting it from env
+// 1. Move send to function
+// 2. Change hardcoded collector id to getting it from env
 fn main() {
+    tracing_subscriber::fmt::init();
+
     let (sender, reciever) = mpsc::channel::<CollectorCommand>();
 
     std::thread::spawn(move || {
@@ -59,8 +60,9 @@ fn main() {
         let mut tcp_stream = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS).unwrap();
         if let Ok(command) = reciever.recv() {
             let bytes = protocol::encode_v1(command);
+            tracing::info!("bytes send: {}", bytes.len());
             if let Err(e) = tcp_stream.write_all(&bytes) {
-                println!("Can't write to the buffer 2048 Bytes size, error: {}", e)
+                tracing::error!("Can't write to the buffer 2048 Bytes size, error: {}", e)
             }
         }
     }
