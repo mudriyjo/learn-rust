@@ -12,7 +12,7 @@ async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) -> anyh
 
     // TODO add proper error handling
     let time = DateTime::from_timestamp(seconds as i64, 0).unwrap();
-    println!(
+    tracing::info!(
         "Timestamp: {}, Command: {:?}",
         time.format("%d/%m/%Y %H:%M:%S"),
         command
@@ -28,7 +28,7 @@ pub async fn run_collection(bind_address: &str) -> anyhow::Result<()> {
         if let Ok((stream, address)) = handler.accept().await {
             let _ = tokio::spawn(request_handle(stream, address)).await?;
         } else {
-            println!("Can't accept new connection...")
+            tracing::error!("Can't accept new connection...")
         }
     }
 }
