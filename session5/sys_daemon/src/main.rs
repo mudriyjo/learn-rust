@@ -61,6 +61,8 @@ fn send_command(reciever: &Receiver<CollectorCommand>) {
 // TODO
 // 1. Change hardcoded collector id to getting it from env
 fn main() {
+    color_eyre::install().expect("Error with starting color eyre hook...");
+
     tracing_subscriber::fmt::init();
 
     let (sender, reciever) = mpsc::channel::<CollectorCommand>();
