@@ -2814,6 +2814,8 @@ version = "0.1.0"
 dependencies = [
  "protocol",
  "sysinfo",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
