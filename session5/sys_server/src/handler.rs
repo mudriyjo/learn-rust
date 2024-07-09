@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use chrono::DateTime;
 use tokio::{io::AsyncReadExt, net::TcpStream};
 
-pub async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) {
+async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) -> anyhow::Result<()> {
     let mut buf = Vec::with_capacity(2048);
 
     tcp_stream.read_buf(&mut buf).await.unwrap();
@@ -17,4 +17,18 @@ pub async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) {
         time.format("%d/%m/%Y %H:%M:%S"),
         command
     );
+
+    Ok(())
+}
+
+pub async fn run_collection(bind_address: &str) -> anyhow::Result<()> {
+    let handler = tokio::net::TcpListener::bind(bind_address).await?;
+
+    loop {
+        if let Ok((stream, address)) = handler.accept().await {
+            let _ = tokio::spawn(request_handle(stream, address)).await?;
+        } else {
+            println!("Can't accept new connection...")
+        }
+    }
 }
