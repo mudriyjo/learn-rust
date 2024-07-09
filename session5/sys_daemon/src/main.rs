@@ -1,7 +1,7 @@
 use std::{
     io::Write,
-    net::{TcpListener, TcpStream},
-    sync::mpsc::{self, Sender},
+    net::TcpStream,
+    sync::mpsc::{self, Receiver, Sender},
     thread,
     time::{Duration, Instant},
 };
@@ -9,7 +9,7 @@ use std::{
 use protocol::CollectorCommand;
 use sysinfo::System;
 
-const DAEMON_COLLECTOR_ADDRESS: &'static str = "0.0.0.0:9444";
+const DAEMON_COLLECTOR_ADDRESS: &str = "0.0.0.0:9444";
 
 fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
     let mut sys = System::new_all();
@@ -44,9 +44,22 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
     }
 }
 
+fn send_command(reciever: &Receiver<CollectorCommand>) {
+    let mut tcp_stream = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS).unwrap();
+
+    if let Ok(command) = reciever.recv() {
+        let bytes = protocol::encode_v1(command);
+        
+        tracing::info!("bytes send: {}", bytes.len());
+
+        if let Err(e) = tcp_stream.write_all(&bytes) {
+            tracing::error!("Can't write to the buffer 2048 Bytes size, error: {}", e)
+        }
+    }
+}
+
 // TODO
-// 1. Move send to function
-// 2. Change hardcoded collector id to getting it from env
+// 1. Change hardcoded collector id to getting it from env
 fn main() {
     tracing_subscriber::fmt::init();
 
@@ -57,13 +70,6 @@ fn main() {
     });
 
     loop {
-        let mut tcp_stream = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS).unwrap();
-        if let Ok(command) = reciever.recv() {
-            let bytes = protocol::encode_v1(command);
-            tracing::info!("bytes send: {}", bytes.len());
-            if let Err(e) = tcp_stream.write_all(&bytes) {
-                tracing::error!("Can't write to the buffer 2048 Bytes size, error: {}", e)
-            }
-        }
+        send_command(&reciever);
     }
 }
