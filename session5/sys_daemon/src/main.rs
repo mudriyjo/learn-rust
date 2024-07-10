@@ -75,7 +75,6 @@ fn init_id_collector() -> anyhow::Result<u128> {
 }
 
 // TODO
-// 1. Change hardcoded collector id to uuid crate -v 4 and use file for persistence to save/read
 // 2. Add DeQueue for 100 record to hold them while server is not working
 // 3. Add method send queue to send whole queue in 1 single tcp connection
 // 4. Add custom errors type using thiserror crate to handle problem with connections
