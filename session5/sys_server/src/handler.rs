@@ -6,6 +6,7 @@ use tokio::{io::AsyncReadExt, net::TcpStream};
 async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) -> anyhow::Result<()> {
     let mut buf = Vec::with_capacity(2048);
 
+    // TODO add parse many messages
     tcp_stream.read_buf(&mut buf).await.unwrap();
 
     let (seconds, command) = protocol::decode_v1(&buf);

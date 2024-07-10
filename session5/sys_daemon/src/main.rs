@@ -1,4 +1,5 @@
 use std::{
+    collections::VecDeque,
     io::Write,
     net::TcpStream,
     sync::mpsc::{self, Receiver, Sender},
@@ -44,20 +45,48 @@ fn gathering_info(collector_id: u128, tx: Sender<protocol::CollectorCommand>) {
     }
 }
 
-fn send_command(reciever: &Receiver<CollectorCommand>) {
-    if let Ok(mut tcp_stream) = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS) {
-        if let Ok(command) = reciever.recv() {
-            let bytes = protocol::encode_v1(command);
+fn send(tcp_stream: &mut TcpStream, bytes: &Vec<u8>) -> anyhow::Result<()> {
+    tcp_stream.write_all(bytes)?;
+    Ok(())
+}
 
-            tracing::info!("bytes send: {}", bytes.len());
+fn send_many_command(tcp_stream: &mut TcpStream, commands: &mut VecDeque<Vec<u8>>) {
+    while let Some(message) = commands.pop_front() {
+        tracing::info!("bytes send: {}", message.len());
 
-            if let Err(e) = tcp_stream.write_all(&bytes) {
-                tracing::error!("Can't write to the buffer 2048 Bytes size, error: {}", e)
-            }
+        if let Err(e) = tcp_stream.write(&message) {
+            commands.push_front(message);
+            tracing::error!("Can't send other messages cause error: {}", e);
+            return;
         }
-    } else {
-        tracing::error!("Connection refused. Trying reconnect");
-        thread::sleep(Duration::from_secs(1));
+    }
+}
+
+fn send_command(reciever: &Receiver<CollectorCommand>, queue: &mut VecDeque<Vec<u8>>) {
+    if let Ok(command) = reciever.recv() {
+        let bytes = protocol::encode_v1(command);
+        queue.push_front(bytes);
+        println!("queue len: {}", queue.len());
+
+        if let Ok(mut tcp_stream) = TcpStream::connect(DAEMON_COLLECTOR_ADDRESS) {    
+            if queue.len() > 1 {
+                send_many_command(&mut tcp_stream, queue);
+            } else {
+                let message = queue
+                    .pop_front()
+                    .expect("Non empty queue for some reason is empty...");
+
+                tracing::info!("bytes send: {}", message.len());
+
+                if let Err(e) = send(&mut tcp_stream, &message) {
+                    tracing::error!("Can't write to the buffer 2048 Bytes size, error: {}", e);
+                    queue.push_front(message);
+                }
+            }
+        } else {
+            tracing::error!("Connection refused. Trying reconnect");
+            thread::sleep(Duration::from_secs(1));
+        }
     }
 }
 
@@ -75,9 +104,7 @@ fn init_id_collector() -> anyhow::Result<u128> {
 }
 
 // TODO
-// 2. Add DeQueue for 100 record to hold them while server is not working
-// 3. Add method send queue to send whole queue in 1 single tcp connection
-// 4. Add custom errors type using thiserror crate to handle problem with connections
+// 1. Add custom errors type using thiserror crate to handle problem with connections
 fn main() -> anyhow::Result<()> {
     color_eyre::install().expect("Error with starting color eyre hook...");
 
@@ -90,7 +117,8 @@ fn main() -> anyhow::Result<()> {
         gathering_info(collector_id, sender);
     });
 
+    let mut queue: VecDeque<Vec<u8>> = VecDeque::with_capacity(100);
     loop {
-        send_command(&reciever);
+        send_command(&reciever, &mut queue);
     }
 }
