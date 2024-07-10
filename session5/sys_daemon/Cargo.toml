@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.86"
 color-eyre = "0.6.3"
 protocol ={ path = "../protocol"}
 sysinfo = { version = "0.30.12", features = ["apple-app-store"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
-uuid = { version = "1.10.0", features = ["v6", "fast-rng"] }
+uuid = { version = "1.10.0", features = ["v6", "fast-rng", "v4"] }
