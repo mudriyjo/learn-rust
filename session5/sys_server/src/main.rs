@@ -2,6 +2,17 @@ mod handler;
 
 const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 
+// TODO
+// 1. Save all data to DB
+// Prepare next queries
+// 2. Get all dataPoints from DB
+// 3. Get all dataPoints from DB by collector
+// 4. Get all collectors ids and last seen timestamp
+// Prepare web server
+// 5. Prepare API to retrieve the JSON data from P.2 to P.4
+// 6. Prepare page to draw index and show all collectors
+// 7. Prepare page to draw collector page -> Should showe collector log with all data 
+//      and 2 Graphics CPU and Memory utilization
 #[tokio::main]
 async fn main() {
     color_eyre::install().expect("Error with starting color eyre hook...");
