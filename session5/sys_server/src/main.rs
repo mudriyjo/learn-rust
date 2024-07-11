@@ -1,3 +1,5 @@
+use sqlx::{pool, PgPool};
+
 mod handler;
 
 const SERVER_ADDRESS: &str = "0.0.0.0:9444";
@@ -14,7 +16,13 @@ const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 // 7. Prepare page to draw collector page -> Should showe collector log with all data 
 //      and 2 Graphics CPU and Memory utilization
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
+    dotenv::dotenv().unwrap();
+    let db_url = std::env::var("DATABASE_URL")?;
+    let pool = PgPool::connect(&db_url).await?;
+
+    sqlx::migrate!("./migrations").run(&pool).await?;
+
     color_eyre::install().expect("Error with starting color eyre hook...");
 
     tracing_subscriber::fmt::init();
@@ -22,4 +30,6 @@ async fn main() {
     handler::run_collection(SERVER_ADDRESS)
         .await
         .expect("Error on starting sys collector server...");
+    
+    Ok(())
 }
