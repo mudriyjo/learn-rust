@@ -18,7 +18,6 @@ async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) -> anyh
 
     // TODO add parse many messages
     tcp_stream.read_buf(&mut buf).await?;
-    println!("buffer: {buf:?}, len: {}", buf.len());
 
     // TODO add proper error handling
     match protocol::decode_v1(&buf) {
