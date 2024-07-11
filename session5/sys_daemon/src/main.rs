@@ -109,8 +109,6 @@ fn init_id_collector() -> anyhow::Result<u128> {
     }
 }
 
-// TODO
-// 1. Add custom errors type using thiserror crate to handle problem with connections
 fn main() -> anyhow::Result<()> {
     color_eyre::install().expect("Error with starting color eyre hook...");
 
