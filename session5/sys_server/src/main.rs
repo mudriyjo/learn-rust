@@ -1,6 +1,10 @@
-use sqlx::{pool, PgPool};
+use axum::{routing::get, Extension};
+use repository::data_point_repository::get_all_datapoints;
+use sqlx::PgPool;
+use tokio::net::TcpListener;
 
 mod handler;
+mod repository;
 
 const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 
@@ -18,6 +22,7 @@ const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().unwrap();
+    let server_port_address = std::env::var("SERVER")?;
     let db_url = std::env::var("DATABASE_URL")?;
     let pool = PgPool::connect(&db_url).await?;
 
@@ -27,9 +32,19 @@ async fn main() -> anyhow::Result<()> {
 
     tracing_subscriber::fmt::init();
 
+    let connection = TcpListener::bind(server_port_address).await?;
+    println!("Start server...");
+    let router = axum::Router::new()
+        .route("/", get(get_all_datapoints))
+        .layer(Extension(pool));
+
+    let server = axum::serve(connection, router);
+
     handler::run_collection(SERVER_ADDRESS)
         .await
         .expect("Error on starting sys collector server...");
+    
+    server.await?;
     
     Ok(())
 }

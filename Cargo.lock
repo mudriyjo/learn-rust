@@ -2835,11 +2835,14 @@ name = "sys_server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "chrono",
  "color-eyre",
  "dotenv",
  "futures",
  "protocol",
+ "serde",
+ "serde_json",
  "sqlx",
  "tokio",
  "tracing",
