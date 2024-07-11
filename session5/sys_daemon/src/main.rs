@@ -65,6 +65,12 @@ fn send_many_command(tcp_stream: &mut TcpStream, commands: &mut VecDeque<Vec<u8>
 fn send_command(reciever: &Receiver<CollectorCommand>, queue: &mut VecDeque<Vec<u8>>) {
     if let Ok(command) = reciever.recv() {
         let bytes = protocol::encode_v1(command);
+
+        // TODO refactor this method
+        if queue.len() > 50 {
+            queue.pop_back();
+        }
+
         queue.push_front(bytes);
         println!("queue len: {}", queue.len());
 
@@ -117,7 +123,7 @@ fn main() -> anyhow::Result<()> {
         gathering_info(collector_id, sender);
     });
 
-    let mut queue: VecDeque<Vec<u8>> = VecDeque::with_capacity(100);
+    let mut queue: VecDeque<Vec<u8>> = VecDeque::with_capacity(20);
     loop {
         send_command(&reciever, &mut queue);
     }
