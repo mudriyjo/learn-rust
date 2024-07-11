@@ -2837,6 +2837,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "color-eyre",
+ "futures",
  "protocol",
  "tokio",
  "tracing",
