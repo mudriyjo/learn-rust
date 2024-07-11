@@ -1,7 +1,17 @@
-use std::{io::Write, net::SocketAddr};
+use std::{net::SocketAddr};
 
 use chrono::DateTime;
+use protocol::{CollectorCommand, Commands};
 use tokio::{io::AsyncReadExt, net::TcpStream};
+
+fn print_command(seconds: &u32, command: &CollectorCommand) {
+    let time = DateTime::from_timestamp(*seconds as i64, 0).unwrap();
+    tracing::info!(
+        "Timestamp: {}, Command: {:?}",
+        time.format("%d/%m/%Y %H:%M:%S"),
+        command
+    );
+}
 
 async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) -> anyhow::Result<()> {
     let mut buf = Vec::with_capacity(2048);
@@ -10,15 +20,13 @@ async fn request_handle(mut tcp_stream: TcpStream, _address: SocketAddr) -> anyh
     tcp_stream.read_buf(&mut buf).await?;
     println!("buffer: {buf:?}, len: {}", buf.len());
 
-    let (seconds, command) = protocol::decode_v1(&buf);
     // TODO add proper error handling
-    let time = DateTime::from_timestamp(seconds as i64, 0).unwrap();
-    tracing::info!(
-        "Timestamp: {}, Command: {:?}",
-        time.format("%d/%m/%Y %H:%M:%S"),
-        command
-    );
-
+    match protocol::decode_v1(&buf) {
+        Commands::Command((seconds, command)) => print_command(&seconds, &command),
+        Commands::Commands(commands_list) => commands_list
+            .into_iter()
+            .for_each(|el| print_command(&el.0, &el.1)),
+    }
     Ok(())
 }
 
