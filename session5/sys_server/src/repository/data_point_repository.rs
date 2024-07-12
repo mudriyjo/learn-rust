@@ -1,5 +1,5 @@
 use axum::{Extension, Json};
-use protocol::{CollectorCommand, Commands};
+use protocol::CollectorCommand;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::FromRow, Pool, Postgres};
 
@@ -47,7 +47,6 @@ pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand) -> anyh
 
             Ok(())
         }
-        _ => anyhow::bail!("Doesn't support this type of Collector command: {:?}", com),
     }
 }
 

@@ -24,16 +24,16 @@ async fn request_handle(
     let mut buf = Vec::with_capacity(1024);
     tcp_stream.read_to_end(&mut buf).await?;
 
-    // TODO add proper error handling
     match protocol::decode_v1(&buf) {
-        Commands::Command((_seconds, command)) => {
+        Commands::Command((seconds, command)) => {
+            print_command(&seconds, &command);
             save_datapoint(pool, command).await?;
-            // print_command(&seconds, &command)
         }
         Commands::Commands(commands_list) => {
-            // tracing::info!("len buf; {:?}, buf: {}", buf, commands_list.len());
-            // tracing::info!("amount of commands, {}", commands_list.len());
-            let com_list = commands_list.into_iter().map(|v| v.1).collect();
+            let com_list = commands_list.into_iter().map(|v| {
+                print_command(&v.0, &v.1);
+                v.1
+            }).collect();
             save_datapoint_list(pool, com_list).await?;
         }
     }
