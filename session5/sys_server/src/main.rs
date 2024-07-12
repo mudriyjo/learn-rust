@@ -32,19 +32,20 @@ async fn main() -> anyhow::Result<()> {
 
     tracing_subscriber::fmt::init();
 
+    let extension_pool = pool.clone();
     let connection = TcpListener::bind(server_port_address).await?;
     println!("Start server...");
     let router = axum::Router::new()
         .route("/", get(get_all_datapoints))
-        .layer(Extension(pool));
+        .layer(Extension(extension_pool));
 
     let server = axum::serve(connection, router);
 
-    handler::run_collection(SERVER_ADDRESS)
+    handler::run_collection(SERVER_ADDRESS, &pool)
         .await
         .expect("Error on starting sys collector server...");
     
     server.await?;
-    
+
     Ok(())
 }

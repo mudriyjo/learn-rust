@@ -1,4 +1,5 @@
 use axum::{Extension, Json};
+use protocol::{CollectorCommand, Commands};
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::FromRow, Pool, Postgres};
 
@@ -29,16 +30,26 @@ pub async fn get_all_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> J
 }
 
 pub async fn save_datapoint(
-    Extension(pool): Extension<Pool<Postgres>>,
-    datapoint: Datapoints,
+    pool: Pool<Postgres>,
+    com: CollectorCommand,
 ) -> anyhow::Result<()> {
-    sqlx::query("INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu) VALUES ($1, $2, $3, $4);")
-            .bind(datapoint.collector_id)
-            .bind(datapoint.total_memory)
-            .bind(datapoint.used_memory)
-            .bind(datapoint.average_cpu)
+    match com {
+        CollectorCommand::SubmitData {
+            collector_id,
+            total_memory,
+            used_memory,
+            average_cpu_usage,
+        } => {
+            sqlx::query("INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu) VALUES ($1, $2, $3, $4);")
+            .bind(collector_id.to_string())
+            .bind(total_memory as i64)
+            .bind(used_memory as i64)
+            .bind(average_cpu_usage)
             .execute(&pool)
             .await?;
 
-    Ok(())
+            Ok(())
+        }
+        _ => anyhow::bail!("Doesn't support this type of Collector command: {:?}", com),
+    }
 }
