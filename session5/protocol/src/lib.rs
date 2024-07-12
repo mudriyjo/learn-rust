@@ -141,23 +141,37 @@ mod tests {
 
     #[test]
     fn test_encoding_many_and_decoding() {
-        let commands = vec![CollectorCommand::SubmitData {
-            collector_id: 1,
-            total_memory: 1024,
-            used_memory: 512,
-            average_cpu_usage: 50.2,
-        },
-        CollectorCommand::SubmitData {
-            collector_id: 2,
-            total_memory: 1024,
-            used_memory: 512,
-            average_cpu_usage: 50.2,
-        }];
+        let commands = vec![
+            CollectorCommand::SubmitData {
+                collector_id: 1,
+                total_memory: 1024,
+                used_memory: 512,
+                average_cpu_usage: 50.2,
+            },
+            CollectorCommand::SubmitData {
+                collector_id: 2,
+                total_memory: 1024,
+                used_memory: 512,
+                average_cpu_usage: 50.2,
+            },
+            CollectorCommand::SubmitData {
+                collector_id: 3,
+                total_memory: 1024,
+                used_memory: 512,
+                average_cpu_usage: 50.2,
+            },
+        ];
 
-        let encoded_msg: Vec<u8> = commands.clone().into_iter().map(encode_v1).flatten().collect();
-
+        let encoded_msg: Vec<u8> = commands
+            .clone()
+            .into_iter()
+            .map(encode_v1)
+            .flatten()
+            .collect();
+        
         if let Commands::Commands(command_list) = decode_v1(&encoded_msg) {
-            let result_commands: Vec<CollectorCommand> = command_list.into_iter().map(|el| el.1).collect();
+            let result_commands: Vec<CollectorCommand> =
+                command_list.into_iter().map(|el| el.1).collect();
             assert_eq!(commands, result_commands);
         } else {
             unreachable!("Should decode one command to one Commands...");

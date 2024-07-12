@@ -5,7 +5,7 @@ use protocol::{CollectorCommand, Commands};
 use sqlx::{Pool, Postgres};
 use tokio::{io::AsyncReadExt, net::TcpStream};
 
-use crate::repository::data_point_repository::save_datapoint;
+use crate::repository::data_point_repository::{save_datapoint, save_datapoint_list};
 
 fn print_command(seconds: &u32, command: &CollectorCommand) {
     let time = DateTime::from_timestamp(*seconds as i64, 0).unwrap();
@@ -21,10 +21,8 @@ async fn request_handle(
     _address: SocketAddr,
     pool: Pool<Postgres>,
 ) -> anyhow::Result<()> {
-    let mut buf = Vec::with_capacity(2048);
-
-    // TODO add parse many messages
-    tcp_stream.read_buf(&mut buf).await?;
+    let mut buf = Vec::with_capacity(1024);
+    tcp_stream.read_to_end(&mut buf).await?;
 
     // TODO add proper error handling
     match protocol::decode_v1(&buf) {
@@ -33,10 +31,10 @@ async fn request_handle(
             // print_command(&seconds, &command)
         }
         Commands::Commands(commands_list) => {
-            for command in commands_list {
-                let pool_clone = pool.clone();
-                save_datapoint(pool_clone, command.1).await?;
-            }
+            // tracing::info!("len buf; {:?}, buf: {}", buf, commands_list.len());
+            // tracing::info!("amount of commands, {}", commands_list.len());
+            let com_list = commands_list.into_iter().map(|v| v.1).collect();
+            save_datapoint_list(pool, com_list).await?;
         }
     }
     Ok(())

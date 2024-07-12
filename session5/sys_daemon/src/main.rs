@@ -51,6 +51,10 @@ fn send(tcp_stream: &mut TcpStream, bytes: &Vec<u8>) -> anyhow::Result<()> {
 }
 
 fn send_many_command(tcp_stream: &mut TcpStream, commands: &mut VecDeque<Vec<u8>>) {
+    let byte_len: usize = commands.iter().map(|x| x.len()).sum();
+    let byte: Vec<&u8> = commands.iter().flatten().collect();
+    tracing::info!("Send commands: {}, bytes: {:?}", commands.len()
+    , byte);
     while let Some(message) = commands.pop_front() {
         tracing::info!("bytes send: {}", message.len());
 

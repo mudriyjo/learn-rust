@@ -29,10 +29,7 @@ pub async fn get_all_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> J
     Json(result)
 }
 
-pub async fn save_datapoint(
-    pool: Pool<Postgres>,
-    com: CollectorCommand,
-) -> anyhow::Result<()> {
+pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand) -> anyhow::Result<()> {
     match com {
         CollectorCommand::SubmitData {
             collector_id,
@@ -52,4 +49,31 @@ pub async fn save_datapoint(
         }
         _ => anyhow::bail!("Doesn't support this type of Collector command: {:?}", com),
     }
+}
+
+pub async fn save_datapoint_list(
+    pool: Pool<Postgres>,
+    com: Vec<CollectorCommand>,
+) -> anyhow::Result<()> {
+    sqlx::query_builder::QueryBuilder::new("INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu) ")
+        .push_values(com.iter(), |mut b, command| {
+            match command {
+                CollectorCommand::SubmitData{
+                    collector_id,
+                    total_memory,
+                    used_memory,
+                    average_cpu_usage
+                } => {
+                    b.push_bind(collector_id.to_string());
+                    b.push_bind(*total_memory as i64);
+                    b.push_bind(*used_memory as i64);
+                    b.push_bind(average_cpu_usage);
+                }
+            }
+        })
+        .build()
+        .execute(&pool)
+        .await?;
+
+    Ok(())
 }
