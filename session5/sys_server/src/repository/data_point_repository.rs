@@ -58,7 +58,7 @@ pub async fn get_datapoints_by_collector_id(
 //     .unwrap();
 // }
 
-pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand) -> anyhow::Result<()> {
+pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand, timestamp: u32) -> anyhow::Result<()> {
     match com {
         CollectorCommand::SubmitData {
             collector_id,
@@ -66,11 +66,12 @@ pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand) -> anyh
             used_memory,
             average_cpu_usage,
         } => {
-            sqlx::query("INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu) VALUES ($1, $2, $3, $4);")
+            sqlx::query("INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu, created_time) VALUES ($1, $2, $3, $4, $5);")
             .bind(collector_id.to_string())
             .bind(total_memory as i64)
             .bind(used_memory as i64)
             .bind(average_cpu_usage)
+            .bind(timestamp as i32)
             .execute(&pool)
             .await?;
 
@@ -81,22 +82,23 @@ pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand) -> anyh
 
 pub async fn save_datapoint_list(
     pool: Pool<Postgres>,
-    com: Vec<CollectorCommand>,
+    com: Vec<(u32, CollectorCommand)>,
 ) -> anyhow::Result<()> {
     sqlx::query_builder::QueryBuilder::new(
-        "INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu) ",
+        "INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu, created_time) ",
     )
     .push_values(com.iter(), |mut b, command| match command {
-        CollectorCommand::SubmitData {
+        (timestamp, CollectorCommand::SubmitData {
             collector_id,
             total_memory,
             used_memory,
             average_cpu_usage,
-        } => {
+        }) => {
             b.push_bind(collector_id.to_string());
             b.push_bind(*total_memory as i64);
             b.push_bind(*used_memory as i64);
             b.push_bind(average_cpu_usage);
+            b.push_bind(*timestamp as i32);
         }
     })
     .build()

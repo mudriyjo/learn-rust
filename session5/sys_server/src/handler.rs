@@ -27,14 +27,10 @@ async fn request_handle(
     match protocol::decode_v1(&buf) {
         Commands::Command((seconds, command)) => {
             print_command(&seconds, &command);
-            save_datapoint(pool, command).await?;
+            save_datapoint(pool, command, seconds).await?;
         }
         Commands::Commands(commands_list) => {
-            let com_list = commands_list.into_iter().map(|v| {
-                print_command(&v.0, &v.1);
-                v.1
-            }).collect();
-            save_datapoint_list(pool, com_list).await?;
+            save_datapoint_list(pool, commands_list).await?;
         }
     }
     Ok(())

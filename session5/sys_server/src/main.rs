@@ -1,6 +1,6 @@
 use axum::{routing::get, Extension};
 use repository::data_point_repository::{
-    get_collectors, get_datapoints, get_datapoints_by_collector_id,
+    get_datapoints, get_datapoints_by_collector_id,
 };
 use sqlx::PgPool;
 use tokio::net::TcpListener;
