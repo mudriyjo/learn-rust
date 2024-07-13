@@ -10,7 +10,7 @@ pub struct Datapoints {
     pub total_memory: i64,
     pub used_memory: i64,
     pub average_cpu: f32,
-    pub created_time: i32,
+    pub created_time: i64,
 }
 
 //TODO REMOVE unwrap

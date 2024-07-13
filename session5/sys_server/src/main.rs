@@ -1,7 +1,5 @@
 use axum::{routing::get, Extension};
-use repository::data_point_repository::{
-    get_datapoints, get_datapoints_by_collector_id,
-};
+use repository::data_point_repository::{get_datapoints, get_datapoints_by_collector_id};
 use sqlx::PgPool;
 use tokio::net::TcpListener;
 
@@ -37,7 +35,6 @@ async fn main() -> anyhow::Result<()> {
     let extension_pool = pool.clone();
     let connection = TcpListener::bind(server_port_address).await?;
 
-    println!("Start server...");
     let router = axum::Router::new()
         .route("/api/datapoint", get(get_datapoints))
         .route(
@@ -49,11 +46,14 @@ async fn main() -> anyhow::Result<()> {
 
     let server = axum::serve(connection, router);
 
-    println!("Start daemon listner...");
-    handler::run_collection(SERVER_ADDRESS, &pool)
-        .await
-        .expect("Error on starting sys collector server...");
+    tokio::task::spawn(async move {
+        println!("Start daemon listner...");
+        handler::run_collection(SERVER_ADDRESS, &pool)
+            .await
+            .expect("Error on starting sys collector server...");
+    });
 
+    println!("Start server...");
     server.await?;
 
     Ok(())
