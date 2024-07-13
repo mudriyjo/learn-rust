@@ -1,5 +1,7 @@
 use axum::{routing::get, Extension};
-use repository::data_point_repository::get_all_datapoints;
+use repository::data_point_repository::{
+    get_collectors, get_datapoints, get_datapoints_by_collector_id,
+};
 use sqlx::PgPool;
 use tokio::net::TcpListener;
 
@@ -17,7 +19,7 @@ const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 // Prepare web server
 // 5. Prepare API to retrieve the JSON data from P.2 to P.4
 // 6. Prepare page to draw index and show all collectors
-// 7. Prepare page to draw collector page -> Should showe collector log with all data 
+// 7. Prepare page to draw collector page -> Should showe collector log with all data
 //      and 2 Graphics CPU and Memory utilization
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -34,17 +36,24 @@ async fn main() -> anyhow::Result<()> {
 
     let extension_pool = pool.clone();
     let connection = TcpListener::bind(server_port_address).await?;
+
     println!("Start server...");
     let router = axum::Router::new()
-        .route("/", get(get_all_datapoints))
+        .route("/api/datapoint", get(get_datapoints))
+        .route(
+            "/api/datapoint/:collector_id",
+            get(get_datapoints_by_collector_id),
+        )
+        .route("/api/collector", get(get_collectors))
         .layer(Extension(extension_pool));
 
     let server = axum::serve(connection, router);
 
+    println!("Start daemon listner...");
     handler::run_collection(SERVER_ADDRESS, &pool)
         .await
         .expect("Error on starting sys collector server...");
-    
+
     server.await?;
 
     Ok(())

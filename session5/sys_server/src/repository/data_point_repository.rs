@@ -13,7 +13,7 @@ pub struct Datapoints {
 }
 
 //TODO REMOVE unwrap
-pub async fn get_all_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
+pub async fn get_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
     let res: Vec<Datapoints> = sqlx::query_as(
         "SELECT id, collector_id, total_memory, used_memory, average_cpu FROM datalog;",
     )
@@ -27,6 +27,13 @@ pub async fn get_all_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> J
         .collect();
 
     Json(result)
+}
+pub async fn get_datapoints_by_collector_id() {
+
+}
+
+pub async fn get_collectors() {
+
 }
 
 pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand) -> anyhow::Result<()> {
