@@ -13,6 +13,12 @@ pub struct Datapoints {
     pub created_time: i64,
 }
 
+#[derive(Debug, FromRow, Deserialize, Serialize)]
+pub struct LastSeenCollector {
+    pub collector_id: String,
+    pub last_update: i64,
+}
+
 //TODO REMOVE unwrap
 pub async fn get_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
     let res: Vec<Datapoints> = sqlx::query_as(
@@ -49,17 +55,27 @@ pub async fn get_datapoints_by_collector_id(
     Json(result)
 }
 
-// pub async fn get_collectors(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
-//     let res: Vec<Datapoints> = sqlx::query_as(
-//         "SELECT collector_id, total_memory, used_memory, average_cpu FROM ",
-//     )
-//     .bind(collector_id)
-//     .fetch_all(&pool)
-//     .await
-//     .unwrap();
-// }
+pub async fn get_collectors(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
+    let res: Vec<LastSeenCollector> = sqlx::query_as(
+        "select distinct on (collector_id) collector_id, created_time from (select distinct collector_id, created_time from datalog order by collector_id, created_time desc);",
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
 
-pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand, timestamp: u32) -> anyhow::Result<()> {
+    let result: Vec<String> = res
+        .into_iter()
+        .map(|el| serde_json::to_string(&el).unwrap())
+        .collect();
+
+    Json(result)
+}
+
+pub async fn save_datapoint(
+    pool: Pool<Postgres>,
+    com: CollectorCommand,
+    timestamp: u32,
+) -> anyhow::Result<()> {
     match com {
         CollectorCommand::SubmitData {
             collector_id,
@@ -89,12 +105,15 @@ pub async fn save_datapoint_list(
         "INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu, created_time) ",
     )
     .push_values(com.iter(), |mut b, command| match command {
-        (timestamp, CollectorCommand::SubmitData {
-            collector_id,
-            total_memory,
-            used_memory,
-            average_cpu_usage,
-        }) => {
+        (
+            timestamp,
+            CollectorCommand::SubmitData {
+                collector_id,
+                total_memory,
+                used_memory,
+                average_cpu_usage,
+            },
+        ) => {
             b.push_bind(collector_id.to_string());
             b.push_bind(*total_memory as i64);
             b.push_bind(*used_memory as i64);

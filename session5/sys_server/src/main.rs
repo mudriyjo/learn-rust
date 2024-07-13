@@ -1,5 +1,5 @@
 use axum::{routing::get, Extension};
-use repository::data_point_repository::{get_datapoints, get_datapoints_by_collector_id};
+use repository::data_point_repository::{get_collectors, get_datapoints, get_datapoints_by_collector_id};
 use sqlx::PgPool;
 use tokio::net::TcpListener;
 
@@ -41,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
             "/api/datapoint/:collector_id",
             get(get_datapoints_by_collector_id),
         )
-        // .route("/api/collector", get(get_collectors))
+        .route("/api/collector", get(get_collectors))
         .layer(Extension(extension_pool));
 
     let server = axum::serve(connection, router);
