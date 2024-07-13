@@ -10,12 +10,13 @@ pub struct Datapoints {
     pub total_memory: i64,
     pub used_memory: i64,
     pub average_cpu: f32,
+    pub created_time: i32,
 }
 
 //TODO REMOVE unwrap
 pub async fn get_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
     let res: Vec<Datapoints> = sqlx::query_as(
-        "SELECT id, collector_id, total_memory, used_memory, average_cpu FROM datalog;",
+        "SELECT id, collector_id, total_memory, used_memory, average_cpu, created_time FROM datalog;",
     )
     .fetch_all(&pool)
     .await
@@ -33,7 +34,7 @@ pub async fn get_datapoints_by_collector_id(
     Extension(pool): Extension<Pool<Postgres>>,
 ) -> Json<Vec<String>> {
     let res: Vec<Datapoints> = sqlx::query_as(
-        "SELECT id, collector_id, total_memory, used_memory, average_cpu FROM datalog WHERE collector_id = $1",
+        "SELECT id, collector_id, total_memory, used_memory, average_cpu, created_time FROM datalog WHERE collector_id = $1",
     )
     .bind(collector_id)
     .fetch_all(&pool)
