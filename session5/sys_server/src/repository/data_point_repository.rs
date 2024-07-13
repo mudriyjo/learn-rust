@@ -1,4 +1,4 @@
-use axum::{Extension, Json};
+use axum::{extract::Path, Extension, Json};
 use protocol::CollectorCommand;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::FromRow, Pool, Postgres};
@@ -28,13 +28,35 @@ pub async fn get_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> Json<
 
     Json(result)
 }
-pub async fn get_datapoints_by_collector_id() {
+pub async fn get_datapoints_by_collector_id(
+    Path(collector_id): Path<String>,
+    Extension(pool): Extension<Pool<Postgres>>,
+) -> Json<Vec<String>> {
+    let res: Vec<Datapoints> = sqlx::query_as(
+        "SELECT id, collector_id, total_memory, used_memory, average_cpu FROM datalog WHERE collector_id = $1",
+    )
+    .bind(collector_id)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
 
+    let result: Vec<String> = res
+        .into_iter()
+        .map(|el| serde_json::to_string(&el).unwrap())
+        .collect();
+
+    Json(result)
 }
 
-pub async fn get_collectors() {
-
-}
+// pub async fn get_collectors(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
+//     let res: Vec<Datapoints> = sqlx::query_as(
+//         "SELECT collector_id, total_memory, used_memory, average_cpu FROM ",
+//     )
+//     .bind(collector_id)
+//     .fetch_all(&pool)
+//     .await
+//     .unwrap();
+// }
 
 pub async fn save_datapoint(pool: Pool<Postgres>, com: CollectorCommand) -> anyhow::Result<()> {
     match com {
@@ -61,25 +83,25 @@ pub async fn save_datapoint_list(
     pool: Pool<Postgres>,
     com: Vec<CollectorCommand>,
 ) -> anyhow::Result<()> {
-    sqlx::query_builder::QueryBuilder::new("INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu) ")
-        .push_values(com.iter(), |mut b, command| {
-            match command {
-                CollectorCommand::SubmitData{
-                    collector_id,
-                    total_memory,
-                    used_memory,
-                    average_cpu_usage
-                } => {
-                    b.push_bind(collector_id.to_string());
-                    b.push_bind(*total_memory as i64);
-                    b.push_bind(*used_memory as i64);
-                    b.push_bind(average_cpu_usage);
-                }
-            }
-        })
-        .build()
-        .execute(&pool)
-        .await?;
+    sqlx::query_builder::QueryBuilder::new(
+        "INSERT INTO datalog (collector_id, total_memory, used_memory, average_cpu) ",
+    )
+    .push_values(com.iter(), |mut b, command| match command {
+        CollectorCommand::SubmitData {
+            collector_id,
+            total_memory,
+            used_memory,
+            average_cpu_usage,
+        } => {
+            b.push_bind(collector_id.to_string());
+            b.push_bind(*total_memory as i64);
+            b.push_bind(*used_memory as i64);
+            b.push_bind(average_cpu_usage);
+        }
+    })
+    .build()
+    .execute(&pool)
+    .await?;
 
     Ok(())
 }

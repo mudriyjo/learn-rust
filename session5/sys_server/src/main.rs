@@ -44,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
             "/api/datapoint/:collector_id",
             get(get_datapoints_by_collector_id),
         )
-        .route("/api/collector", get(get_collectors))
+        // .route("/api/collector", get(get_collectors))
         .layer(Extension(extension_pool));
 
     let server = axum::serve(connection, router);
