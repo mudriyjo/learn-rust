@@ -34,8 +34,7 @@ pub enum Commands {
 }
 
 pub fn encode_v1(command: CollectorCommand) -> Vec<u8> {
-    let payload_str = serde_json::to_string(&command).expect("Can't deserialize Collector command");
-    let payload_bytes = payload_str.as_bytes();
+    let payload_bytes = bincode::serialize(&command).expect("Can't deserialize Collector command");
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -45,7 +44,7 @@ pub fn encode_v1(command: CollectorCommand) -> Vec<u8> {
 
     let payload_size = (payload_bytes.len() as u32).to_be_bytes();
 
-    let crc32 = crc32fast::hash(payload_bytes).to_be_bytes();
+    let crc32 = crc32fast::hash(&payload_bytes).to_be_bytes();
 
     let message_size: u32 = (MAGIC_NUMBER.to_be_bytes().len()
         + VERSION_NUMBER.to_be_bytes().len()
@@ -60,7 +59,7 @@ pub fn encode_v1(command: CollectorCommand) -> Vec<u8> {
     result.extend_from_slice(&timestamp_bytes);
     result.extend_from_slice(&message_size.to_be_bytes());
     result.extend_from_slice(&payload_size);
-    result.extend_from_slice(payload_bytes);
+    result.extend_from_slice(&payload_bytes);
     result.extend_from_slice(&crc32);
     result
 }
@@ -112,7 +111,7 @@ pub fn decode_helper(bytes: &[u8]) -> (u32, CollectorCommand) {
     assert_eq!(crc32_calculated, crc32_transfered);
 
     let payload: CollectorCommand =
-        serde_json::from_slice(&bytes[16..(16 + payload_size as usize)])
+        bincode::deserialize(&bytes[16..(16 + payload_size as usize)])
             .expect("Error decoding bytes to CollectorCommand");
     (timestamp, payload)
 }

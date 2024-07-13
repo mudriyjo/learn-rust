@@ -18,57 +18,103 @@ class MyApp extends StatelessWidget {
         title: "Sys server",
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         ),
         home: MyHomePage(),
       ),
     );
   }
-  //   return MaterialApp(
-  //     title: 'Sys server',
-  //     theme: ThemeData(
-  //       // This is the theme of your application.
-  //       //
-  //       // TRY THIS: Try running your application with "flutter run". You'll see
-  //       // the application has a purple toolbar. Then, without quitting the app,
-  //       // try changing the seedColor in the colorScheme below to Colors.green
-  //       // and then invoke "hot reload" (save your changes or press the "hot
-  //       // reload" button in a Flutter-supported IDE, or press "r" if you used
-  //       // the command line to start the app).
-  //       //
-  //       // Notice that the counter didn't reset back to zero; the application
-  //       // state is not lost during the reload. To reset the state, use hot
-  //       // restart instead.
-  //       //
-  //       // This works for code too, not just values: Most code changes can be
-  //       // tested with just a hot reload.
-  //       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-  //       useMaterial3: true,
-  //     ),
-  //     home: const MyHomePage(title: 'Flutter Demo Home Page'),
-  //   );
-  // }
 }
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+  
+  var favourites = <WordPair>[];
+
+  void toggleFavorite() {
+    if (favourites.contains(current)) {
+      favourites.remove(current);
+    } else {
+      favourites.add(current);
+    }
+    notifyListeners();
+  }
+
+  void getNext() {
+    current = WordPair.random();
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var wordPair = appState.current;
+    
+    IconData icon;
+    if (appState.favourites.contains(wordPair)) {
+      icon = Icons.favorite;
+    } else {
+      icon = Icons.favorite_border;
+    }
+
     return Scaffold(
-      body: Column(
-        children: [
-          Text('A random idea :'),
-          Text(appState.current.asLowerCase),
-          ElevatedButton(
-            onPressed: () {
-              print("Button pressed!");
-            },
-            child: Text("Next"))
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Text('A random idea :'),
+            // SizedBox(height: 10.0),
+            BigCard(wordPair: wordPair),
+            SizedBox(height: 10.0),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+              ElevatedButton.icon(
+              onPressed: () {
+                appState.toggleFavorite();
+              },
+              icon: Icon(icon),
+              label: Text("Like")),
+              SizedBox(width: 10.0),
+              ElevatedButton(
+                onPressed: () {
+                  appState.getNext();
+                },
+                child: Text("Next"))
+            ])
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BigCard extends StatelessWidget {
+  const BigCard({
+    super.key,
+    required this.wordPair,
+  });
+
+  final WordPair wordPair;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.displayMedium!.copyWith (
+      color: theme.colorScheme.onPrimary
+    );
+
+    return Card(
+      color: theme.colorScheme.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text(
+          wordPair.asLowerCase,
+          style: style,
+          semanticsLabel: "${wordPair.first} ${wordPair.second}",
+        ),
       ),
     );
   }
