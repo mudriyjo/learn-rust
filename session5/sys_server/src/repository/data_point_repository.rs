@@ -57,7 +57,7 @@ pub async fn get_datapoints_by_collector_id(
 
 pub async fn get_collectors(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
     let res: Vec<LastSeenCollector> = sqlx::query_as(
-        "select distinct on (collector_id) collector_id, created_time from (select distinct collector_id, created_time from datalog order by collector_id, created_time desc);",
+        "select distinct on (collector_id) collector_id, created_time as last_update from (select distinct collector_id, created_time from datalog order by collector_id, created_time desc);",
     )
     .fetch_all(&pool)
     .await
