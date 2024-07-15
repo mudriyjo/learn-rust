@@ -27,8 +27,8 @@
                 <tbody>
                     {% for last_seen_collector in collector %}
                     <tr>
-                        <td>{{ last_seen_collector.collector_id }}</td>
-                        <td>{{ last_seen_collector.last_update }}</td>
+                        <td>{{ last_seen_collector[0] }}</td>
+                        <td>{{ last_seen_collector[1] }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

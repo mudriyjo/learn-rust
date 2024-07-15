@@ -1,5 +1,6 @@
 use axum::{response::IntoResponse, routing::get, Extension};
 use axum_template::{engine::Engine, RenderHtml};
+use chrono::{DateTime, NaiveDateTime};
 use minijinja::{context, Environment};
 use service::data_point_service::get_collectors_list;
 use repository::data_point_repository::{
@@ -23,8 +24,11 @@ const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 type AppEngine = Engine<Environment<'static>>;
 
 async fn index(engine: AppEngine, Extension(pool): Extension<Pool<Postgres>>) -> impl IntoResponse {
-    let data = get_collectors(pool).await;
-
+    let data: Vec<(String, String)> = get_collectors(pool).await.into_iter().map(|el| {
+        let time = DateTime::from_timestamp(el.last_update,0).unwrap();
+        let time_str = format!("{}", time.format("%d-%m-%Y %H:%M:%S"));
+        (el.collector_id, time_str)
+    }).collect(); 
     RenderHtml("index.jinja", engine, context!(collector => data))
 }
 
