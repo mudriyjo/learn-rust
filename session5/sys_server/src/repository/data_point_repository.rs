@@ -55,7 +55,7 @@ pub async fn get_datapoints_by_collector_id(
     Json(result)
 }
 
-pub async fn get_collectors(Extension(pool): Extension<Pool<Postgres>>) -> Json<Vec<String>> {
+pub async fn get_collectors(pool: Pool<Postgres>) -> Vec<LastSeenCollector> {
     let res: Vec<LastSeenCollector> = sqlx::query_as(
         "select distinct on (collector_id) collector_id, created_time as last_update from (select distinct collector_id, created_time from datalog order by collector_id, created_time desc);",
     )
@@ -63,12 +63,7 @@ pub async fn get_collectors(Extension(pool): Extension<Pool<Postgres>>) -> Json<
     .await
     .unwrap();
 
-    let result: Vec<String> = res
-        .into_iter()
-        .map(|el| serde_json::to_string(&el).unwrap())
-        .collect();
-
-    Json(result)
+    res
 }
 
 pub async fn save_datapoint(

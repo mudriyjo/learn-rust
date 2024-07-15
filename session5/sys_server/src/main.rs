@@ -1,15 +1,17 @@
 use axum::{response::IntoResponse, routing::get, Extension};
 use axum_template::{engine::Engine, RenderHtml};
-use minijinja::{render, Environment};
+use minijinja::{context, Environment};
+use service::data_point_service::get_collectors_list;
 use repository::data_point_repository::{
     get_collectors, get_datapoints, get_datapoints_by_collector_id,
 };
 use serde::Serialize;
-use sqlx::PgPool;
+use sqlx::{PgPool, Pool, Postgres};
 use tokio::net::TcpListener;
 
 mod handler;
 mod repository;
+mod service;
 
 const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 
@@ -20,23 +22,10 @@ const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 // Add service layer
 type AppEngine = Engine<Environment<'static>>;
 
-#[derive(Debug, Serialize)]
-struct IndexValues {
-    title: String,
-    heading: String,
-    context: String
-}
+async fn index(engine: AppEngine, Extension(pool): Extension<Pool<Postgres>>) -> impl IntoResponse {
+    let data = get_collectors(pool).await;
 
-async fn index(
-    engine: AppEngine
-) -> impl IntoResponse {
-    let data = IndexValues {
-        title: "Test template".to_string(),
-        heading: "Test template".to_string(),
-        context: "Test template".to_string(),
-    };
-
-    RenderHtml("index.jinja", engine, data)
+    RenderHtml("index.jinja", engine, context!(collector => data))
 }
 
 #[tokio::main]
@@ -57,8 +46,8 @@ async fn main() -> anyhow::Result<()> {
     let connection = TcpListener::bind(server_port_address).await?;
 
     let mut env = minijinja::Environment::new();
-        env.set_loader(minijinja::path_loader("./src/static"));
-    
+    env.set_loader(minijinja::path_loader("./src/static"));
+
     let router = axum::Router::new()
         .route("/", get(index))
         .route("/api/datapoint", get(get_datapoints))
@@ -66,20 +55,20 @@ async fn main() -> anyhow::Result<()> {
             "/api/datapoint/:collector_id",
             get(get_datapoints_by_collector_id),
         )
-        .route("/api/collector", get(get_collectors))
+        .route("/api/collector", get(get_collectors_list))
         .layer(Extension(extension_pool))
         .with_state(AppEngine::new(env));
 
     let server = axum::serve(connection, router);
 
     tokio::task::spawn(async move {
-        println!("Start daemon listner...");
+        tracing::info!("Start daemon listner...");
         handler::run_collection(SERVER_ADDRESS, &pool)
             .await
             .expect("Error on starting sys collector server...");
     });
 
-    println!("Start server...");
+    tracing::info!("Start server...");
     server.await?;
 
     Ok(())
