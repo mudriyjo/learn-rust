@@ -1,4 +1,4 @@
-use axum::{extract::Path, Extension, Json};
+use axum::{Extension, Json};
 use protocol::CollectorCommand;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::FromRow, Pool, Postgres};
@@ -36,9 +36,9 @@ pub async fn get_datapoints(Extension(pool): Extension<Pool<Postgres>>) -> Json<
     Json(result)
 }
 pub async fn get_datapoints_by_collector_id(
-    Path(collector_id): Path<String>,
-    Extension(pool): Extension<Pool<Postgres>>,
-) -> Json<Vec<String>> {
+    collector_id: String,
+    pool: Pool<Postgres>,
+) -> Vec<Datapoints> {
     let res: Vec<Datapoints> = sqlx::query_as(
         "SELECT id, collector_id, total_memory, used_memory, average_cpu, created_time FROM datalog WHERE collector_id = $1",
     )
@@ -47,12 +47,7 @@ pub async fn get_datapoints_by_collector_id(
     .await
     .unwrap();
 
-    let result: Vec<String> = res
-        .into_iter()
-        .map(|el| serde_json::to_string(&el).unwrap())
-        .collect();
-
-    Json(result)
+    res
 }
 
 pub async fn get_collectors(pool: Pool<Postgres>) -> Vec<LastSeenCollector> {

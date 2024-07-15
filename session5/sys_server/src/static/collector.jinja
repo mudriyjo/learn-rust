@@ -8,7 +8,7 @@
             rel="stylesheet"
             integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
             crossorigin="anonymous">
-        <title>Sys server</title>
+        <title>Collector</title>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
@@ -20,15 +20,21 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th scope="col">Collector ID</th>
-                        <th scope="col">Last Seen</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">Total Memory</th>
+                        <th scope="col">Used Memory</th>
+                        <th scope="col">Average CPU</th>
+                        <th scope="col">Created at</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for last_seen_collector in collector %}
+                    {% for col in collector %}
                     <tr>
-                        <td><a href="/collector/{{last_seen_collector[0]}}">{{ last_seen_collector[0] }}</td>
-                        <td>{{ last_seen_collector[1] }}</td>
+                        <td>{{ col.id }} </td>
+                        <td>{{ col.total_memory }}</td>
+                        <td>{{ col.used_memory }}</td>
+                        <td>{{ col.average_cpu }}</td>
+                        <td>{{ col.created_time }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

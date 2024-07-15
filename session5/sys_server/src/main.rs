@@ -1,12 +1,12 @@
-use axum::{response::IntoResponse, routing::get, Extension};
+use axum::{extract::Path, response::IntoResponse, routing::get, Extension};
 use axum_template::{engine::Engine, RenderHtml};
-use chrono::{DateTime, NaiveDateTime};
+use chrono::DateTime;
 use minijinja::{context, Environment};
-use service::data_point_service::get_collectors_list;
+use serde::{Deserialize, Serialize};
+use service::data_point_service::{get_collectors_list, get_datapoints_collector};
 use repository::data_point_repository::{
     get_collectors, get_datapoints, get_datapoints_by_collector_id,
 };
-use serde::Serialize;
 use sqlx::{PgPool, Pool, Postgres};
 use tokio::net::TcpListener;
 
@@ -28,8 +28,35 @@ async fn index(engine: AppEngine, Extension(pool): Extension<Pool<Postgres>>) ->
         let time = DateTime::from_timestamp(el.last_update,0).unwrap();
         let time_str = format!("{}", time.format("%d-%m-%Y %H:%M:%S"));
         (el.collector_id, time_str)
-    }).collect(); 
+    }).collect();
+
     RenderHtml("index.jinja", engine, context!(collector => data))
+}
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct DatapointsView {
+    pub id: String,
+    pub total_memory: i64,
+    pub used_memory: i64,
+    pub average_cpu: f32,
+    pub created_time: String,
+}
+
+async fn collector(engine: AppEngine, Path(collector_id): Path<String>, Extension(pool): Extension<Pool<Postgres>>) -> impl IntoResponse {
+    let data: Vec<DatapointsView> = get_datapoints_by_collector_id(collector_id, pool).await.into_iter().map(|el| {
+        let time = DateTime::from_timestamp(el.created_time,0).unwrap();
+        let time_str = format!("{}", time.format("%d-%m-%Y %H:%M:%S"));
+        DatapointsView{
+            id: el.id.to_string(),
+            total_memory: el.total_memory,
+            used_memory: el.used_memory,
+            average_cpu: el.average_cpu,
+            created_time: time_str,
+        }
+    }).collect();
+    
+    RenderHtml("collector.jinja", engine, context!(collector => data))
 }
 
 #[tokio::main]
@@ -54,10 +81,11 @@ async fn main() -> anyhow::Result<()> {
 
     let router = axum::Router::new()
         .route("/", get(index))
+        .route("/collector/:collector_id", get(collector))
         .route("/api/datapoint", get(get_datapoints))
         .route(
             "/api/datapoint/:collector_id",
-            get(get_datapoints_by_collector_id),
+            get(get_datapoints_collector),
         )
         .route("/api/collector", get(get_collectors_list))
         .layer(Extension(extension_pool))
