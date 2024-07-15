@@ -2,11 +2,11 @@ use axum::{extract::Path, response::IntoResponse, routing::get, Extension};
 use axum_template::{engine::Engine, RenderHtml};
 use chrono::DateTime;
 use minijinja::{context, Environment};
-use serde::{Deserialize, Serialize};
-use service::data_point_service::{get_collectors_list, get_datapoints_collector};
 use repository::data_point_repository::{
     get_collectors, get_datapoints, get_datapoints_by_collector_id,
 };
+use serde::{Deserialize, Serialize};
+use service::data_point_service::{get_collectors_list, get_datapoints_collector};
 use sqlx::{PgPool, Pool, Postgres};
 use tokio::net::TcpListener;
 
@@ -24,15 +24,18 @@ const SERVER_ADDRESS: &str = "0.0.0.0:9444";
 type AppEngine = Engine<Environment<'static>>;
 
 async fn index(engine: AppEngine, Extension(pool): Extension<Pool<Postgres>>) -> impl IntoResponse {
-    let data: Vec<(String, String)> = get_collectors(pool).await.into_iter().map(|el| {
-        let time = DateTime::from_timestamp(el.last_update,0).unwrap();
-        let time_str = format!("{}", time.format("%d-%m-%Y %H:%M:%S"));
-        (el.collector_id, time_str)
-    }).collect();
+    let data: Vec<(String, String)> = get_collectors(pool)
+        .await
+        .into_iter()
+        .map(|el| {
+            let time = DateTime::from_timestamp(el.last_update, 0).unwrap();
+            let time_str = format!("{}", time.format("%d-%m-%Y %H:%M:%S"));
+            (el.collector_id, time_str)
+        })
+        .collect();
 
     RenderHtml("index.jinja", engine, context!(collector => data))
 }
-
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DatapointsView {
@@ -43,20 +46,51 @@ pub struct DatapointsView {
     pub created_time: String,
 }
 
-async fn collector(engine: AppEngine, Path(collector_id): Path<String>, Extension(pool): Extension<Pool<Postgres>>) -> impl IntoResponse {
-    let data: Vec<DatapointsView> = get_datapoints_by_collector_id(collector_id, pool).await.into_iter().map(|el| {
-        let time = DateTime::from_timestamp(el.created_time,0).unwrap();
-        let time_str = format!("{}", time.format("%d-%m-%Y %H:%M:%S"));
-        DatapointsView{
-            id: el.id.to_string(),
-            total_memory: el.total_memory,
-            used_memory: el.used_memory,
-            average_cpu: el.average_cpu,
-            created_time: time_str,
-        }
-    }).collect();
-    
-    RenderHtml("collector.jinja", engine, context!(collector => data))
+async fn collector(
+    engine: AppEngine,
+    Path(collector_id): Path<String>,
+    Extension(pool): Extension<Pool<Postgres>>,
+) -> impl IntoResponse {
+    let datapoints = get_datapoints_by_collector_id(collector_id, pool).await;
+    let l_cpu_set = datapoints
+        .iter()
+        .map(|el| {
+            let time = DateTime::from_timestamp(el.created_time, 0).unwrap();
+            format!("\"{}\"", time.format("%H:%M:%S"))
+        })
+        .collect::<Vec<String>>()
+        .join(",");
+    let d_cpu_set = datapoints
+        .iter()
+        .map(|el| el.average_cpu.to_string())
+        .collect::<Vec<String>>()
+        .join(",");
+    let data: Vec<DatapointsView> = datapoints
+        .into_iter()
+        .map(|el| {
+            let time = DateTime::from_timestamp(el.created_time, 0).unwrap();
+            let time_str = format!("{}", time.format("%d-%m-%Y %H:%M:%S"));
+            DatapointsView {
+                id: el.id.to_string(),
+                total_memory: el.total_memory,
+                used_memory: el.used_memory,
+                average_cpu: el.average_cpu,
+                created_time: time_str,
+            }
+        })
+        .collect();
+
+    RenderHtml(
+        "collector.jinja",
+        engine,
+        context!(
+            collector => data,
+            label_cpu_set => l_cpu_set,
+            data_cpu_set => d_cpu_set,
+            // label_mem_set => l_mem_set,
+            // data_mem_set => d_mem_set,
+        ),
+    )
 }
 
 #[tokio::main]
