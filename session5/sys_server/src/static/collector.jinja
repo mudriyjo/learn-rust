@@ -18,7 +18,10 @@
         </nav>
         <div class="container">
             <div>
-                <canvas id="myChart"></canvas>
+                <canvas id="cpuChart"></canvas>
+            </div>
+            <div>
+                <canvas id="memChart"></canvas>
             </div>
             <table class="table">
                 <thead>
@@ -45,9 +48,10 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-            const ctx = document.getElementById('myChart');
+            const cpuChart = document.getElementById('cpuChart');
+            const memChart = document.getElementById('memChart');
           
-            new Chart(ctx, {
+            new Chart(cpuChart, {
               type: 'line',
               data: {
                 labels: [{{ label_cpu_set }}],
@@ -57,14 +61,22 @@
                   borderWidth: 1
                 }]
               },
-            //   options: {
-            //     scales: {
-            //       y: {
-            //         beginAtZero: true
-            //       }
-            //     }
-            //   }
             });
+
+            new Chart(memChart, {
+                type: 'line',
+                data: {
+                  labels: [{{ label_mem_set }}],
+                  datasets: [{
+                    label: 'Average memory usage',
+                    data: [{{ data_mem_set }}],
+                    borderColor: [
+                        'rgb(255, 99, 132)'
+                    ],
+                    borderWidth: 1
+                  }]
+                },
+              });
           </script>
     </body>
 </html>

@@ -52,6 +52,7 @@ async fn collector(
     Extension(pool): Extension<Pool<Postgres>>,
 ) -> impl IntoResponse {
     let datapoints = get_datapoints_by_collector_id(collector_id, pool).await;
+
     let l_cpu_set = datapoints
         .iter()
         .map(|el| {
@@ -65,6 +66,21 @@ async fn collector(
         .map(|el| el.average_cpu.to_string())
         .collect::<Vec<String>>()
         .join(",");
+
+    let l_mem_set = datapoints
+        .iter()
+        .map(|el| {
+            let time = DateTime::from_timestamp(el.created_time, 0).unwrap();
+            format!("\"{}\"", time.format("%H:%M:%S"))
+        })
+        .collect::<Vec<String>>()
+        .join(",");
+    let d_mem_set = datapoints
+        .iter()
+        .map(|el| ((el.used_memory as f64 / el.total_memory as f64) * 100.0).to_string())
+        .collect::<Vec<String>>()
+        .join(",");
+
     let data: Vec<DatapointsView> = datapoints
         .into_iter()
         .map(|el| {
@@ -87,8 +103,8 @@ async fn collector(
             collector => data,
             label_cpu_set => l_cpu_set,
             data_cpu_set => d_cpu_set,
-            // label_mem_set => l_mem_set,
-            // data_mem_set => d_mem_set,
+            label_mem_set => l_mem_set,
+            data_mem_set => d_mem_set,
         ),
     )
 }
