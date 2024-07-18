@@ -50,7 +50,7 @@
         <script>
             const cpuChart = document.getElementById('cpuChart');
             const memChart = document.getElementById('memChart');
-          
+
             new Chart(cpuChart, {
               type: 'line',
               data: {
@@ -61,6 +61,9 @@
                   borderWidth: 1
                 }]
               },
+              options: {
+                maintainAspectRatio: false,
+                }
             });
 
             new Chart(memChart, {
@@ -76,6 +79,9 @@
                     borderWidth: 1
                   }]
                 },
+                options: {
+                    maintainAspectRatio: false,
+                }
               });
           </script>
     </body>
